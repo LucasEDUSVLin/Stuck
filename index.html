@@ -9,76 +9,1054 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>tailwind.config={theme:{extend:{colors:{shopee:{DEFAULT:'#EE4D2D',dark:'#D7381C',subtle:'#FFEBE7'},stucknavy:{navy:'#0F172A'}},fontFamily:{sans:['Inter','sans-serif']}}}}</script>
-  <style>body{font-family:Inter,sans-serif}::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}.tab-active{border-bottom:3px solid #EE4D2D;color:#EE4D2D;font-weight:700}</style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            shopee: { DEFAULT: '#EE4D2D', dark: '#D7381C', light: '#FFF1EE', subtle: '#FFEBE7' },
+            stucknavy: { navy: '#0F172A' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: Inter, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .tab-active { border-bottom: 3px solid #EE4D2D; color: #EE4D2D; font-weight: 700; }
+    .mini-bar { height: 10px; border-radius: 9999px; background: linear-gradient(90deg, #fca5a5 0%, #fb7185 50%, #f97316 100%); }
+  </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
   <div id="toast-container" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-2 pointer-events-none" aria-live="polite"></div>
-  <header class="bg-stucknavy-navy text-white shadow-lg sticky top-0 z-30 border-b-2 border-shopee"><div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-    <div class="bg-shopee px-4 py-1.5 rounded-xl font-black text-xl tracking-wider flex items-center gap-2"><i data-lucide="package-search" class="w-6 h-6"></i>STUCK</div>
-    <div class="flex items-center gap-3"><div class="hidden sm:block text-xs text-slate-300"><span class="text-slate-400">Última importação:</span> <strong id="header-last-import">Nenhum ficheiro carregado</strong></div>
-      <button onclick="document.getElementById('csv-file-input').click()" class="bg-shopee hover:bg-shopee-dark text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4"></i>Importar CSV</button><input type="file" id="csv-file-input" accept=".csv,text/csv" class="hidden" onchange="handleCSVUpload(event)">
-      <button onclick="exportCleanedCSV()" class="bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i><span class="hidden md:inline">Exportar</span></button>
-    </div></div></header>
-  <div class="sm:hidden bg-slate-900 text-slate-300 px-4 py-1.5 text-[11px] flex justify-between"><span>Última importação:</span><strong id="header-last-import-mobile" class="text-shopee">Nenhum ficheiro carregado</strong></div>
-  <div class="bg-white border-b shadow-sm"><div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4"><nav class="flex gap-6 text-sm"><button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3.5 px-1 tab-active">Gestão STUCK</button><button onclick="switchTab('comparator')" id="tab-comparator" class="py-3.5 px-1">Comparador de Order IDs</button></nav><span class="hidden lg:block text-xs text-slate-500">Dias contados desde Current Station Received Time</span></div></div>
+
+  <header class="bg-stucknavy-navy text-white shadow-lg sticky top-0 z-30 border-b-2 border-shopee">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <div class="bg-shopee px-4 py-1.5 rounded-xl font-black text-xl tracking-wider flex items-center gap-2">
+        <i data-lucide="package-search" class="w-6 h-6"></i>
+        STUCK
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:block text-xs text-slate-300">
+          <span class="text-slate-400">Última importação:</span>
+          <strong id="header-last-import">Nenhum ficheiro carregado</strong>
+        </div>
+
+        <button onclick="document.getElementById('csv-file-input').click()" class="bg-shopee hover:bg-shopee-dark text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+          <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+          Importar CSV
+        </button>
+        <input type="file" id="csv-file-input" accept=".csv,text/csv" class="hidden" onchange="handleCSVUpload(event)">
+
+        <button onclick="exportCleanedCSV()" class="bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span class="hidden md:inline">Exportar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="sm:hidden bg-slate-900 text-slate-300 px-4 py-1.5 text-[11px] flex justify-between">
+    <span>Última importação:</span>
+    <strong id="header-last-import-mobile" class="text-shopee">Nenhum ficheiro carregado</strong>
+  </div>
+
+  <div class="bg-white border-b shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
+      <nav class="flex gap-6 text-sm">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3.5 px-1 tab-active">Gestão STUCK</button>
+        <button onclick="switchTab('comparator')" id="tab-comparator" class="py-3.5 px-1">Comparador de Order IDs</button>
+        <button onclick="switchTab('history')" id="tab-history" class="py-3.5 px-1">Evolução por semana</button>
+      </nav>
+      <span class="hidden lg:block text-xs text-slate-500">Monitoramento diário com histórico local</span>
+    </div>
+  </div>
+
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
     <section id="view-dashboard" class="space-y-5">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl p-4 border shadow-sm"><p class="text-xs font-semibold text-slate-500 uppercase">Total Hub_Received</p><strong id="kpi-total" class="text-2xl">0</strong><p class="text-xs text-shopee">Encomendas retidas</p></div>
-        <div class="bg-white rounded-2xl p-4 border shadow-sm"><p class="text-xs font-semibold text-slate-500 uppercase">Risco crítico (12–15 dias)</p><strong id="kpi-risk-critical" class="text-2xl text-rose-600">0</strong><p class="text-xs text-rose-600">Próximo do limite</p></div>
-        <div class="bg-white rounded-2xl p-4 border shadow-sm"><p class="text-xs font-semibold text-slate-500 uppercase">Pendentes de ativo</p><strong id="kpi-pending-ativo" class="text-2xl text-amber-600">0</strong><p class="text-xs text-amber-600">Ainda não solucionados</p></div>
-        <div class="bg-white rounded-2xl p-4 border shadow-sm"><p class="text-xs font-semibold text-slate-500 uppercase">Tratados / liberados</p><strong id="kpi-resolved" class="text-2xl text-emerald-600">0</strong><p class="text-xs text-emerald-600">Status solucionado</p></div>
+        <div class="bg-white rounded-2xl p-4 border shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Total Hub_Received</p>
+          <strong id="kpi-total" class="text-2xl">0</strong>
+          <p class="text-xs text-shopee">Encomendas retidas</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Risco crítico (12–15 dias)</p>
+          <strong id="kpi-risk-critical" class="text-2xl text-rose-600">0</strong>
+          <p class="text-xs text-rose-600">Próximo do limite</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Pendentes de ativo</p>
+          <strong id="kpi-pending-ativo" class="text-2xl text-amber-600">0</strong>
+          <p class="text-xs text-amber-600">Ainda não solucionados</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Tratados / liberados</p>
+          <strong id="kpi-resolved" class="text-2xl text-emerald-600">0</strong>
+          <p class="text-xs text-emerald-600">Status solucionado</p>
+        </div>
       </div>
-      <section class="bg-white rounded-2xl p-4 border shadow-sm space-y-3"><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        <input id="search-input" oninput="applyFilters()" placeholder="Pesquisar pedido, rastreio, comprador ou estação" class="lg:col-span-2 p-2 bg-slate-50 border rounded-xl text-xs">
-        <select id="filter-hub-status" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs"><option value="Hub_Received">Status: Hub_Received</option><option value="ALL">Todos os status</option></select>
-        <select id="filter-ativo-status" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs"><option value="">Todos os status de ativo</option><option>Pendente</option><option>Em Andamento</option><option>Aguardando Retirada</option><option>Reentrega Solicitada</option><option>Solucionado</option><option>Sem Resposta</option></select>
-        <select id="filter-risk" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs"><option value="">Qualquer risco</option><option value="CRITICO">Crítico (12–15 dias)</option><option value="ALERTA">Alerta (8–11 dias)</option><option value="SEGURO">Seguro (0–7 dias)</option><option value="LOST">LOST (&gt;15 dias)</option><option value="DATA_INVALIDA">Data ausente/inválida</option></select>
-      </div><div class="flex flex-wrap justify-between items-center gap-2 text-xs border-t pt-3"><span>A exibir: <strong id="filtered-count-badge" class="text-shopee">0 encomendas</strong></span><div class="flex gap-3 items-center"><button onclick="bulkMarkStatus('Em Andamento')" class="px-3 py-1 bg-slate-100 rounded-lg font-semibold">Marcar selecionados em andamento</button><button onclick="resetFilters()" class="text-slate-500 underline">Limpar filtros</button></div></div></section>
-      <section class="bg-white rounded-2xl border shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-900 text-white text-[11px] uppercase"><tr><th class="p-3"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" aria-label="Selecionar todos"></th><th class="p-3">Order ID / Rastreio</th><th class="p-3">Comprador</th><th class="p-3">Estação / destino</th><th class="p-3">Chegada à estação / dias</th><th class="p-3">Status Hub</th><th class="p-3">Status ativo</th><th class="p-3">Ação</th></tr></thead><tbody id="stuck-table-body" class="divide-y text-xs"></tbody></table></div><div id="table-empty" class="hidden py-14 text-center"><h3 class="font-bold">Nenhuma encomenda encontrada</h3><p class="text-xs text-slate-500 mt-1">Importe um relatório CSV ou ajuste os filtros.</p></div></section>
+
+      <section class="bg-white rounded-2xl p-4 border shadow-sm space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <input id="search-input" oninput="applyFilters()" placeholder="Pesquisar pedido, rastreio, comprador ou estação" class="lg:col-span-2 p-2 bg-slate-50 border rounded-xl text-xs">
+          <select id="filter-hub-status" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs">
+            <option value="Hub_Received">Status: Hub_Received</option>
+            <option value="ALL">Todos os status</option>
+          </select>
+          <select id="filter-ativo-status" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs">
+            <option value="">Todos os status de ativo</option>
+            <option>Pendente</option>
+            <option>Em Andamento</option>
+            <option>Aguardando Retirada</option>
+            <option>Reentrega Solicitada</option>
+            <option>Solucionado</option>
+            <option>Sem Resposta</option>
+          </select>
+          <select id="filter-risk" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs">
+            <option value="">Qualquer risco</option>
+            <option value="CRITICO">Crítico (12–15 dias)</option>
+            <option value="ALERTA">Alerta (8–11 dias)</option>
+            <option value="SEGURO">Seguro (0–7 dias)</option>
+            <option value="LOST">LOST (&gt;15 dias)</option>
+            <option value="DATA_INVALIDA">Data ausente/inválida</option>
+          </select>
+        </div>
+
+        <div class="flex flex-wrap justify-between items-center gap-2 text-xs border-t pt-3">
+          <span>A exibir: <strong id="filtered-count-badge" class="text-shopee">0 encomendas</strong></span>
+          <div class="flex gap-3 items-center">
+            <button onclick="bulkMarkStatus('Em Andamento')" class="px-3 py-1 bg-slate-100 rounded-lg font-semibold">Marcar selecionados em andamento</button>
+            <button onclick="resetFilters()" class="text-slate-500 underline">Limpar filtros</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-slate-900 text-white text-[11px] uppercase">
+              <tr>
+                <th class="p-3"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" aria-label="Selecionar todos"></th>
+                <th class="p-3">Order ID / Rastreio</th>
+                <th class="p-3">Comprador</th>
+                <th class="p-3">Estação / destino</th>
+                <th class="p-3">Chegada à estação / dias</th>
+                <th class="p-3">Status Hub</th>
+                <th class="p-3">Status ativo</th>
+                <th class="p-3">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="stuck-table-body" class="divide-y text-xs"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="hidden py-14 text-center">
+          <h3 class="font-bold">Nenhuma encomenda encontrada</h3>
+          <p class="text-xs text-slate-500 mt-1">Importe um relatório CSV ou ajuste os filtros.</p>
+        </div>
+      </section>
     </section>
-    <section id="view-comparator" class="hidden"><div class="bg-white rounded-2xl p-6 border shadow-sm space-y-5"><div class="flex flex-wrap justify-between gap-3"><div><h2 class="font-extrabold text-lg">Comparador de Order IDs</h2><p class="text-xs text-slate-500">Somente “Solucionado” é considerado ativo concluído.</p></div><div class="flex gap-2"><button onclick="compareOrderIDs()" class="bg-shopee text-white rounded-xl px-4 py-2 text-xs font-bold">Comparar lista</button><button onclick="clearComparator()" class="bg-slate-100 rounded-xl px-3 py-2 text-xs">Limpar</button></div></div><label for="comparator-input" class="block text-xs font-bold">Cole IDs (um por linha ou separados por vírgula):</label><textarea id="comparator-input" rows="5" placeholder="BR2640539946103&#10;BR2646102239424" class="w-full p-3 bg-slate-50 border rounded-xl text-xs font-mono"></textarea><div id="comparator-summary" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl text-xs"><div>Total consultado: <strong id="comp-total-count">0</strong></div><div class="text-emerald-700">Solucionados: <strong id="comp-done-count">0</strong></div><div class="text-rose-700">Pendentes/não localizados: <strong id="comp-pending-count">0</strong></div></div><div id="comparator-results" class="hidden grid lg:grid-cols-2 gap-4"><div class="bg-emerald-50 p-4 rounded-xl"><div class="flex justify-between font-bold text-emerald-800 text-xs mb-3">Solucionados (<span id="done-header-count">0</span>)<button onclick="copyList('done')">Copiar IDs</button></div><div id="comp-list-done" class="space-y-2 max-h-96 overflow-auto"></div></div><div class="bg-rose-50 p-4 rounded-xl"><div class="flex justify-between font-bold text-rose-800 text-xs mb-3">Pendentes / ausentes (<span id="pending-header-count">0</span>)<button onclick="copyList('pending')">Copiar IDs</button></div><div id="comp-list-pending" class="space-y-2 max-h-96 overflow-auto"></div></div></div></div></section>
+
+    <section id="view-comparator" class="hidden">
+      <div class="bg-white rounded-2xl p-6 border shadow-sm space-y-5">
+        <div class="flex flex-wrap justify-between gap-3">
+          <div>
+            <h2 class="font-extrabold text-lg">Comparador de Order IDs</h2>
+            <p class="text-xs text-slate-500">Somente “Solucionado” é considerado ativo concluído.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="compareOrderIDs()" class="bg-shopee text-white rounded-xl px-4 py-2 text-xs font-bold">Comparar lista</button>
+            <button onclick="clearComparator()" class="bg-slate-100 rounded-xl px-3 py-2 text-xs">Limpar</button>
+          </div>
+        </div>
+
+        <label for="comparator-input" class="block text-xs font-bold">Cole IDs (um por linha ou separados por vírgula):</label>
+        <textarea id="comparator-input" rows="5" placeholder="BR2640539946103&#10;BR2646102239424" class="w-full p-3 bg-slate-50 border rounded-xl text-xs font-mono"></textarea>
+
+        <div id="comparator-summary" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl text-xs">
+          <div>Total consultado: <strong id="comp-total-count">0</strong></div>
+          <div class="text-emerald-700">Solucionados: <strong id="comp-done-count">0</strong></div>
+          <div class="text-rose-700">Pendentes/não localizados: <strong id="comp-pending-count">0</strong></div>
+        </div>
+
+        <div id="comparator-results" class="hidden grid lg:grid-cols-2 gap-4">
+          <div class="bg-emerald-50 p-4 rounded-xl">
+            <div class="flex justify-between font-bold text-emerald-800 text-xs mb-3">
+              Solucionados (<span id="done-header-count">0</span>)
+              <button onclick="copyList('done')" class="underline">Copiar IDs</button>
+            </div>
+            <div id="comp-list-done" class="space-y-2 max-h-96 overflow-auto"></div>
+          </div>
+          <div class="bg-rose-50 p-4 rounded-xl">
+            <div class="flex justify-between font-bold text-rose-800 text-xs mb-3">
+              Pendentes / ausentes (<span id="pending-header-count">0</span>)
+              <button onclick="copyList('pending')" class="underline">Copiar IDs</button>
+            </div>
+            <div id="comp-list-pending" class="space-y-2 max-h-96 overflow-auto"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-history" class="hidden space-y-5">
+      <div class="bg-white rounded-2xl p-6 border shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
+          <div>
+            <h2 class="font-extrabold text-lg">Evolução por semana</h2>
+            <p class="text-xs text-slate-500">A ferramenta guarda cada importação localmente para você acompanhar o crescimento mensal.</p>
+          </div>
+          <button onclick="exportHistoryBackup()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl px-4 py-2">Exportar backup histórico</button>
+        </div>
+
+        <div id="history-summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5"></div>
+        <div id="history-weekly-grid" class="space-y-3"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border shadow-sm">
+        <h3 class="font-bold text-base mb-3">Importações registradas no histórico</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900 text-white">
+              <tr>
+                <th class="p-2">Data</th>
+                <th class="p-2">Semana</th>
+                <th class="p-2">CSV importado</th>
+                <th class="p-2">Novos</th>
+                <th class="p-2">Total Hub_Received</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
-  <div id="modal-ativo" class="hidden fixed inset-0 z-50 bg-black/60 p-4 items-center justify-center" role="dialog" aria-modal="true"><div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden"><div class="bg-slate-900 text-white p-4 flex justify-between"><h2 class="font-bold">Tratativa do pedido <span id="m-order-sn"></span></h2><button onclick="closeAtivoModal()" aria-label="Fechar">✕</button></div><div class="p-5 overflow-y-auto space-y-4 text-xs"><div class="grid sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl"><div>Rastreio: <strong id="m-tracking"></strong></div><div>Chegada / permanência: <strong id="m-days-stuck"></strong></div><div>Comprador: <strong id="m-buyer-name"></strong></div><div>Estação: <strong id="m-hub-station"></strong></div><div>Destino: <strong id="m-return-dest"></strong></div></div><div><label for="m-buyer-phone-input" class="font-bold">Telefone/WhatsApp</label><input id="m-buyer-phone-input" type="tel" placeholder="DDD + número" class="w-full p-2 border rounded-lg mt-1"></div><div class="flex flex-wrap gap-2"><button onclick="applyTemplate('retirada')" class="p-2 bg-orange-50 rounded-lg">Retirada no Hub</button><button onclick="applyTemplate('endereco')" class="p-2 bg-orange-50 rounded-lg">Confirmar endereço</button><button onclick="applyTemplate('reentrega')" class="p-2 bg-orange-50 rounded-lg">Reentrega</button></div><textarea id="m-message-text" rows="3" class="w-full p-3 bg-slate-50 border rounded-xl"></textarea><div class="flex justify-end gap-2"><button onclick="copyMessageText()" class="px-3 py-2 bg-slate-800 text-white rounded-lg">Copiar mensagem</button><button onclick="triggerWhatsAppDirect()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg">Abrir WhatsApp</button></div><hr><div class="grid sm:grid-cols-2 gap-3"><label>Status do ativo<select id="m-new-status" class="block w-full p-2 border rounded-lg mt-1"><option>Pendente</option><option>Em Andamento</option><option>Aguardando Retirada</option><option>Reentrega Solicitada</option><option>Solucionado</option><option>Sem Resposta</option></select></label><label>Observações<input id="m-new-note" maxlength="1000" class="block w-full p-2 border rounded-lg mt-1"></label></div><div><h3 class="font-bold mb-2">Histórico</h3><div id="m-history-log" class="bg-slate-50 p-3 rounded-xl max-h-36 overflow-auto space-y-2"></div></div></div><div class="bg-slate-50 border-t p-3 flex justify-end gap-2"><button onclick="closeAtivoModal()" class="px-4 py-2 bg-slate-200 rounded-xl">Fechar</button><button onclick="saveAtivoTratativa()" class="px-4 py-2 bg-shopee text-white rounded-xl font-bold">Salvar tratativa</button></div></div></div>
-<script>
-'use strict';
-const STORAGE_KEY='stuck_orders_data',IMPORT_KEY='stuck_last_import_time';const ACTIVE_STATUSES=['Pendente','Em Andamento','Aguardando Retirada','Reentrega Solicitada','Solucionado','Sem Resposta'];let stckOrders=[],currentModalOrderSn=null,lastComparisonDone=[],lastComparisonPending=[];const $=id=>document.getElementById(id);
-document.addEventListener('DOMContentLoaded',()=>{try{const stored=localStorage.getItem(STORAGE_KEY);if(stored){const parsed=JSON.parse(stored);if(Array.isArray(parsed))stckOrders=parsed.map(normalizeOrder).filter(Boolean);}const stamp=localStorage.getItem(IMPORT_KEY);if(stamp)updateLastImportDisplay(stamp);}catch(e){console.error(e);}applyFilters();if(window.lucide)lucide.createIcons();});
-function normalizeOrder(o){if(!o||typeof o!=='object'||!o.orderSn)return null;return{...o,orderSn:String(o.orderSn),trackingNo:String(o.trackingNo||''),buyerName:String(o.buyerName||''),buyerPhone:String(o.buyerPhone||''),receivedTime:String(o.receivedTime||''),status:String(o.status||'Hub_Received'),station:String(o.station||''),returnDest:String(o.returnDest||''),ativoStatus:ACTIVE_STATUSES.includes(o.ativoStatus)?o.ativoStatus:'Pendente',history:Array.isArray(o.history)?o.history:[]};}
-function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(stckOrders));updateKPIs();return true;}catch(e){console.error(e);showToast('Não foi possível salvar. O armazenamento pode estar cheio.','info');return false;}}
-function updateLastImportDisplay(s){$('header-last-import').textContent=s;if($('header-last-import-mobile'))$('header-last-import-mobile').textContent=s;}
-function showToast(message,type='success'){const el=document.createElement('div');el.className=`pointer-events-auto rounded-xl shadow-xl px-4 py-3 text-white text-xs font-bold ${type==='success'?'bg-emerald-600':'bg-slate-900'}`;el.textContent=message;$('toast-container').append(el);setTimeout(()=>el.remove(),3500);}
-// SPX exporta a data como DD-MM-YYYY HH:mm. Não se usa Date(string), evitando parsing ambíguo por navegador/localidade.
-function parseHubReceivedTime(value){const s=String(value||'').trim();if(!s)return null;const m=s.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);if(!m)return null;const [,dd,mm,yyyy,hh,mi,ss='0']=m;const d=+dd,mo=+mm,y=+yyyy,h=+hh,min=+mi,sec=+ss;if(mo<1||mo>12||d<1||h>23||min>59||sec>59)return null;const date=new Date(y,mo-1,d,h,min,sec);return date.getFullYear()===y&&date.getMonth()===mo-1&&date.getDate()===d?date:null;}
-function calculateDaysInHub(value){const received=parseHubReceivedTime(value);if(!received)return null;const elapsed=Date.now()-received.getTime();return elapsed<0?null:Math.floor(elapsed/86400000);}
-function switchTab(name){['dashboard','comparator'].forEach(t=>{$(`view-${t}`).classList.toggle('hidden',t!==name);$(`tab-${t}`).classList.toggle('tab-active',t===name);});}
-function updateKPIs(){const list=stckOrders.filter(o=>o.status==='Hub_Received');$('kpi-total').textContent=list.length;$('kpi-risk-critical').textContent=list.filter(o=>{const d=calculateDaysInHub(o.receivedTime);return d!==null&&d>=12&&d<=15;}).length;$('kpi-pending-ativo').textContent=list.filter(o=>o.ativoStatus!=='Solucionado').length;$('kpi-resolved').textContent=list.filter(o=>o.ativoStatus==='Solucionado').length;}
-function applyFilters(){const query=$('search-input').value.trim().toLowerCase(),hub=$('filter-hub-status').value,ativo=$('filter-ativo-status').value,risk=$('filter-risk').value;const filtered=stckOrders.filter(o=>{if(hub!=='ALL'&&o.status!==hub)return false;if(ativo&&o.ativoStatus!==ativo)return false;if(query&&!`${o.orderSn} ${o.trackingNo} ${o.buyerName} ${o.station} ${o.returnDest}`.toLowerCase().includes(query))return false;const d=calculateDaysInHub(o.receivedTime);if(risk==='DATA_INVALIDA'&&d!==null)return false;if(risk==='CRITICO'&&(d===null||d<12||d>15))return false;if(risk==='ALERTA'&&(d===null||d<8||d>11))return false;if(risk==='SEGURO'&&(d===null||d>7))return false;if(risk==='LOST'&&(d===null||d<=15))return false;return true;}).sort((a,b)=>(calculateDaysInHub(b.receivedTime)??-1)-(calculateDaysInHub(a.receivedTime)??-1));$('filtered-count-badge').textContent=`${filtered.length} encomendas`;renderTable(filtered);updateKPIs();$('select-all').checked=false;}
-function resetFilters(){$('search-input').value='';$('filter-hub-status').value='Hub_Received';$('filter-ativo-status').value='';$('filter-risk').value='';applyFilters();}
-function makeCell(tr,text){const td=document.createElement('td');td.className='p-3';td.textContent=text;tr.append(td);return td;}
-function renderTable(rows){const body=$('stuck-table-body');body.replaceChildren();$('table-empty').classList.toggle('hidden',rows.length>0);for(const o of rows){const tr=document.createElement('tr');tr.className='hover:bg-slate-50';const select=makeCell(tr,'');const cb=document.createElement('input');cb.type='checkbox';cb.className='row-checkbox';cb.value=o.orderSn;select.append(cb);const ids=makeCell(tr,'');const id=document.createElement('strong');id.className='font-mono';id.textContent=o.orderSn;const tracking=document.createElement('div');tracking.className='text-slate-400';tracking.textContent=o.trackingNo||'N/A';ids.append(id,tracking);const buyer=makeCell(tr,o.buyerName||'Não informado');const phone=document.createElement('div');phone.className='text-slate-400';phone.textContent=o.buyerPhone||'Sem telefone';buyer.append(phone);makeCell(tr,`${o.station||'Estação'} / ${o.returnDest||'SOC'}`);const days=calculateDaysInHub(o.receivedTime);makeCell(tr,`${o.receivedTime||'Data ausente'} — ${days===null?'DATA INVÁLIDA/FUTURA':`${days} dia(s)${days>15?' • LOST':days>=12?' • CRÍTICO':days>=8?' • ALERTA':' • SEGURO'}`}`);makeCell(tr,o.status);makeCell(tr,o.ativoStatus);const action=makeCell(tr,'');const b=document.createElement('button');b.className='px-3 py-1.5 rounded-lg bg-shopee text-white font-bold';b.textContent='Fazer ativo';b.onclick=()=>openAtivoModal(o.orderSn);action.append(b);body.append(tr);}}
-function toggleSelectAll(master){document.querySelectorAll('.row-checkbox').forEach(cb=>cb.checked=master.checked);}
-function bulkMarkStatus(status){const ids=new Set([...document.querySelectorAll('.row-checkbox:checked')].map(cb=>cb.value));if(!ids.size){showToast('Selecione ao menos uma encomenda.','info');return;}stckOrders.filter(o=>ids.has(o.orderSn)).forEach(o=>{o.ativoStatus=status;o.history.unshift({date:new Date().toLocaleString('pt-BR'),note:`[Status: ${status}] Atualização em lote.`});});if(saveData())applyFilters();}
-function parseCSVRows(text){text=String(text).replace(/^\uFEFF/,'');const first=text.split(/\r?\n/,1)[0]||'';const delimiter=[',',';','\t'].map(c=>({c,n:first.split(c).length-1})).sort((a,b)=>b.n-a.n)[0].c;const rows=[];let row=[],field='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i];if(quoted){if(ch==='"'&&text[i+1]==='"'){field+='"';i++;}else if(ch==='"')quoted=false;else field+=ch;}else if(ch==='"'&&field==='')quoted=true;else if(ch===delimiter){row.push(field);field='';}else if(ch==='\r'||ch==='\n'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(field);if(row.some(v=>v.trim()))rows.push(row);row=[];field='';}else field+=ch;}if(quoted)throw Error('CSV com aspas sem fechamento.');row.push(field);if(row.some(v=>v.trim()))rows.push(row);return rows;}
-function headerKey(v){return String(v||'').replace(/^\uFEFF/,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/[^a-z0-9]/g,'');}
-function parseCSV(text){let rows;try{rows=parseCSVRows(text);}catch(e){showToast(e.message,'info');return false;}if(rows.length<2){showToast('CSV inválido ou sem linhas de dados.','info');return false;}const header=rows[0].map(headerKey),exact=name=>header.indexOf(headerKey(name));
-  // Cabeçalhos fixos do SPX: selecionar pelo nome exato evita confundir a data com Current Station.
-  const col={order:exact('Order ID'),tracking:exact('SLS Tracking Number'),buyer:exact('Buyer Name'),phone:exact('Buyer Phone'),received:exact('Current Station Received Time'),station:exact('Current Station'),dest:exact('Return Destination'),status:exact('Status')};
-  if(col.order<0||col.received<0){showToast('CSV inválido: faltou Order ID ou Current Station Received Time.','info');return false;}let added=0,updated=0,invalid=0;const imported=[];for(const row of rows.slice(1)){const get=i=>i<0?'':String(row[i]??'').trim();const orderSn=get(col.order);if(!orderSn)continue;const receivedTime=get(col.received);if(!parseHubReceivedTime(receivedTime))invalid++;const fields={orderSn,trackingNo:get(col.tracking),buyerName:get(col.buyer),buyerPhone:get(col.phone),receivedTime,status:get(col.status)||'Hub_Received',station:get(col.station)||'Hub',returnDest:get(col.dest)||'SOC'};const old=stckOrders.find(o=>o.orderSn.toUpperCase()===orderSn.toUpperCase());if(old){for(const [key,value] of Object.entries(fields))if(value||key==='status')old[key]=value;updated++;}else{imported.push({...fields,ativoStatus:'Pendente',history:[]});added++;}}if(!added&&!updated){showToast('Nenhum pedido válido encontrado.','info');return false;}stckOrders=[...imported,...stckOrders];if(!saveData())return false;applyFilters();showToast(`Importados ${added} novos e atualizados ${updated}. Datas inválidas/vazias: ${invalid}.`);return true;}
-function handleCSVUpload(event){const file=event.target.files?.[0];event.target.value='';if(!file)return;if(!/\.csv$/i.test(file.name)){showToast('Selecione um arquivo CSV.','info');return;}const reader=new FileReader();reader.onerror=()=>showToast('Erro ao ler o CSV.','info');reader.onload=()=>{if(parseCSV(reader.result)){const stamp=new Date().toLocaleString('pt-BR');try{localStorage.setItem(IMPORT_KEY,stamp);}catch(e){console.warn(e);}updateLastImportDisplay(stamp);}};reader.readAsText(file,'UTF-8');}
-function csvField(value){let s=String(value??'');if(/^[\s]*[=+@]/.test(s))s="'"+s;return `"${s.replace(/"/g,'""')}"`;}
-function exportCleanedCSV(){if(!stckOrders.length){showToast('Nenhum dado para exportar.','info');return;}const rows=[['Order ID','SLS Tracking Number','Buyer Name','Buyer Phone','Current Station Received Time','Current Station','Return Destination','Status','Status Ativo','Última Tratativa'],...stckOrders.map(o=>[o.orderSn,o.trackingNo,o.buyerName,o.buyerPhone,o.receivedTime,o.station,o.returnDest,o.status,o.ativoStatus,o.history?.[0]?.note||''])];const blob=new Blob(['\uFEFF'+rows.map(r=>r.map(csvField).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`tratativas_stuck_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);}
-function compareOrderIDs(){const ids=[...new Set($('comparator-input').value.split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(Boolean))];if(!ids.length){showToast('Cole ao menos um Order ID.','info');return;}lastComparisonDone=[];lastComparisonPending=[];const map=new Map();stckOrders.forEach(o=>{map.set(o.orderSn.toUpperCase(),o);if(o.trackingNo)map.set(o.trackingNo.toUpperCase(),o);});ids.forEach(id=>{const order=map.get(id);if(order?.ativoStatus==='Solucionado')lastComparisonDone.push({inputID:id,order});else lastComparisonPending.push({inputID:id,order:order||null,foundInSystem:!!order});});$('comp-total-count').textContent=ids.length;$('comp-done-count').textContent=lastComparisonDone.length;$('comp-pending-count').textContent=lastComparisonPending.length;$('done-header-count').textContent=lastComparisonDone.length;$('pending-header-count').textContent=lastComparisonPending.length;renderComparatorLists();$('comparator-summary').classList.remove('hidden');$('comparator-results').classList.remove('hidden');}
-function renderComparatorLists(){for(const [type,items,container] of [['done',lastComparisonDone,$('comp-list-done')],['pending',lastComparisonPending,$('comp-list-pending')]]){container.replaceChildren();if(!items.length){container.textContent=type==='done'?'Nenhum pedido solucionado.':'Nenhum pedido pendente.';continue;}items.forEach(item=>{const card=document.createElement('div');card.className='bg-white rounded-lg border p-3 flex justify-between gap-3';const info=document.createElement('span');info.textContent=item.order?`${item.order.orderSn} — ${item.order.buyerName||'Cliente'} (${item.order.ativoStatus})`:item.inputID;card.append(info);if(item.order){const b=document.createElement('button');b.textContent='Ver';b.className='text-shopee font-bold';b.onclick=()=>openAtivoModal(item.order.orderSn);card.append(b);}container.append(card);});}}
-function clearComparator(){$('comparator-input').value='';$('comparator-summary').classList.add('hidden');$('comparator-results').classList.add('hidden');lastComparisonDone=[];lastComparisonPending=[];}
-async function copyList(type){const list=(type==='done'?lastComparisonDone:lastComparisonPending).map(i=>i.inputID);if(!list.length){showToast('Lista vazia.','info');return;}try{await navigator.clipboard.writeText(list.join('\n'));showToast(`${list.length} ID(s) copiado(s).`);}catch(e){showToast('Não foi possível copiar.','info');}}
-function openAtivoModal(id){const o=stckOrders.find(x=>x.orderSn===id);if(!o)return;currentModalOrderSn=id;$('m-order-sn').textContent=id;$('m-tracking').textContent=o.trackingNo||'N/A';const d=calculateDaysInHub(o.receivedTime);$('m-days-stuck').textContent=d===null?`${o.receivedTime||'Data indisponível'} — inválida/futura`:`${o.receivedTime} — ${d} dia(s)`;$('m-buyer-name').textContent=o.buyerName||'Cliente';$('m-hub-station').textContent=o.station||'Hub';$('m-return-dest').textContent=o.returnDest||'SOC';$('m-buyer-phone-input').value=o.buyerPhone||'';$('m-new-status').value=o.ativoStatus;$('m-new-note').value='';applyTemplate('retirada');const log=$('m-history-log');log.replaceChildren();if(o.history.length)o.history.forEach(h=>{const p=document.createElement('p');p.textContent=`[${h.date||'Data'}] ${h.note||''}`;log.append(p);});else log.textContent='Nenhuma tratativa registrada.';$('modal-ativo').classList.remove('hidden');$('modal-ativo').classList.add('flex');}
-function closeAtivoModal(){$('modal-ativo').classList.add('hidden');$('modal-ativo').classList.remove('flex');currentModalOrderSn=null;}
-function applyTemplate(type){const o=stckOrders.find(x=>x.orderSn===currentModalOrderSn);if(!o)return;const name=o.buyerName||'Cliente',msgs={retirada:`Olá ${name}! Seu pedido ${o.orderSn} encontra-se disponível para retirada na estação (${o.station||'Hub'}). Por favor, confirme o recebimento ou retirada.`,endereco:`Olá ${name}! Precisamos confirmar o endereço para finalizar a entrega do pedido ${o.orderSn}. Poderia nos enviar um ponto de referência?`,reentrega:`Olá ${name}! Estamos tratando a reentrega do pedido ${o.orderSn}.`};$('m-message-text').value=msgs[type]||'';}
-async function copyMessageText(){try{await navigator.clipboard.writeText($('m-message-text').value);showToast('Mensagem copiada.');}catch(e){showToast('Não foi possível copiar.','info');}}
-function triggerWhatsAppDirect(){let phone=$('m-buyer-phone-input').value.replace(/\D/g,'');if(phone.startsWith('55'))phone=phone.slice(2);if(phone.length<10||phone.length>11){showToast('Informe telefone com DDD (10 ou 11 dígitos).','info');return;}window.open(`https://wa.me/55${phone}?text=${encodeURIComponent($('m-message-text').value)}`,'_blank','noopener,noreferrer');}
-function saveAtivoTratativa(){const o=stckOrders.find(x=>x.orderSn===currentModalOrderSn);if(!o){showToast('Pedido não encontrado.','info');closeAtivoModal();return;}const status=$('m-new-status').value;if(!ACTIVE_STATUSES.includes(status)){showToast('Status inválido.','info');return;}o.ativoStatus=status;o.buyerPhone=$('m-buyer-phone-input').value.trim();o.history.unshift({date:new Date().toLocaleString('pt-BR'),note:`[Status: ${status}] ${$('m-new-note').value.trim()||'Tratativa atualizada.'}`});if(saveData()){applyFilters();closeAtivoModal();showToast('Tratativa salva.');}}
-</script>
+
+  <div id="modal-ativo" class="hidden fixed inset-0 z-50 bg-black/60 p-4 items-center justify-center" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="bg-slate-900 text-white p-4 flex justify-between">
+        <h2 class="font-bold">Tratativa do pedido <span id="m-order-sn"></span></h2>
+        <button onclick="closeAtivoModal()" aria-label="Fechar">✕</button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-4 text-xs">
+        <div class="grid sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl">
+          <div>Rastreio: <strong id="m-tracking"></strong></div>
+          <div>Chegada / permanência: <strong id="m-days-stuck"></strong></div>
+          <div>Comprador: <strong id="m-buyer-name"></strong></div>
+          <div>Estação: <strong id="m-hub-station"></strong></div>
+          <div>Destino: <strong id="m-return-dest"></strong></div>
+        </div>
+
+        <div>
+          <label for="m-buyer-phone-input" class="font-bold">Telefone/WhatsApp</label>
+          <input id="m-buyer-phone-input" type="tel" placeholder="DDD + número" class="w-full p-2 border rounded-lg mt-1">
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button onclick="applyTemplate('retirada')" class="p-2 bg-orange-50 rounded-lg">Retirada no Hub</button>
+          <button onclick="applyTemplate('endereco')" class="p-2 bg-orange-50 rounded-lg">Confirmar endereço</button>
+          <button onclick="applyTemplate('reentrega')" class="p-2 bg-orange-50 rounded-lg">Reentrega</button>
+        </div>
+
+        <textarea id="m-message-text" rows="3" class="w-full p-3 bg-slate-50 border rounded-xl"></textarea>
+
+        <div class="flex justify-end gap-2">
+          <button onclick="copyMessageText()" class="px-3 py-2 bg-slate-800 text-white rounded-lg">Copiar mensagem</button>
+          <button onclick="triggerWhatsAppDirect()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg">Abrir WhatsApp</button>
+        </div>
+
+        <hr>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <label>Status do ativo
+            <select id="m-new-status" class="block w-full p-2 border rounded-lg mt-1">
+              <option>Pendente</option>
+              <option>Em Andamento</option>
+              <option>Aguardando Retirada</option>
+              <option>Reentrega Solicitada</option>
+              <option>Solucionado</option>
+              <option>Sem Resposta</option>
+            </select>
+          </label>
+          <label>Observações
+            <input id="m-new-note" maxlength="1000" class="block w-full p-2 border rounded-lg mt-1">
+          </label>
+        </div>
+
+        <div>
+          <h3 class="font-bold mb-2">Histórico</h3>
+          <div id="m-history-log" class="bg-slate-50 p-3 rounded-xl max-h-36 overflow-auto space-y-2"></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 border-t p-3 flex justify-end gap-2">
+        <button onclick="closeAtivoModal()" class="px-4 py-2 bg-slate-200 rounded-xl">Fechar</button>
+        <button onclick="saveAtivoTratativa()" class="px-4 py-2 bg-shopee text-white rounded-xl font-bold">Salvar tratativa</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'stuck_orders_data';
+    const IMPORT_KEY = 'stuck_last_import_time';
+    const HISTORY_KEY = 'stuck_history_data';
+    const ACTIVE_STATUSES = ['Pendente', 'Em Andamento', 'Aguardando Retirada', 'Reentrega Solicitada', 'Solucionado', 'Sem Resposta'];
+
+    let stckOrders = [];
+    let historyData = { imports: [] };
+    let currentModalOrderSn = null;
+    let lastComparisonDone = [];
+    let lastComparisonPending = [];
+
+    const $ = (id) => document.getElementById(id);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            stckOrders = parsed.map(normalizeOrder).filter(Boolean);
+          }
+        }
+
+        const historyStored = localStorage.getItem(HISTORY_KEY);
+        if (historyStored) {
+          const parsed = JSON.parse(historyStored);
+          if (parsed && Array.isArray(parsed.imports)) {
+            historyData = parsed;
+          }
+        }
+
+        const stamp = localStorage.getItem(IMPORT_KEY);
+        if (stamp) updateLastImportDisplay(stamp);
+      } catch (e) {
+        console.error(e);
+      }
+
+      renderHistory();
+      applyFilters();
+      if (window.lucide) lucide.createIcons();
+    });
+
+    function normalizeOrder(o) {
+      if (!o || typeof o !== 'object' || !o.orderSn) return null;
+      return {
+        ...o,
+        orderSn: String(o.orderSn),
+        trackingNo: String(o.trackingNo || ''),
+        buyerName: String(o.buyerName || ''),
+        buyerPhone: String(o.buyerPhone || ''),
+        receivedTime: String(o.receivedTime || ''),
+        status: String(o.status || 'Hub_Received'),
+        station: String(o.station || ''),
+        returnDest: String(o.returnDest || ''),
+        ativoStatus: ACTIVE_STATUSES.includes(o.ativoStatus) ? o.ativoStatus : 'Pendente',
+        history: Array.isArray(o.history) ? o.history : []
+      };
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stckOrders));
+        updateKPIs();
+        return true;
+      } catch (e) {
+        console.error(e);
+        showToast('Não foi possível salvar. O armazenamento pode estar cheio.', 'info');
+        return false;
+      }
+    }
+
+    function saveHistoryData() {
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(historyData));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function updateLastImportDisplay(s) {
+      $('header-last-import').textContent = s;
+      if ($('header-last-import-mobile')) $('header-last-import-mobile').textContent = s;
+    }
+
+    function showToast(message, type = 'success') {
+      const el = document.createElement('div');
+      el.className = `pointer-events-auto rounded-xl shadow-xl px-4 py-3 text-white text-xs font-bold ${type === 'success' ? 'bg-emerald-600' : 'bg-slate-900'}`;
+      el.textContent = message;
+      $('toast-container').append(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function parseHubReceivedTime(value) {
+      const s = String(value || '').trim();
+      if (!s) return null;
+      const m = s.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
+      if (!m) return null;
+      const [, dd, mm, yyyy, hh, mi, ss = m];
+      const d = +dd, mo = +mm, y = +yyyy, h = +hh, min = +mi, sec = +ss || 0;
+      if (mo < 1 || mo > 12 || d < 1 || h > 23 || min > 59 || sec > 59) return null;
+      const date = new Date(y, mo - 1, d, h, min, sec);
+      return date.getFullYear() === y && date.getMonth() === mo - 1 && date.getDate() === d ? date : null;
+    }
+
+    function calculateDaysInHub(value) {
+      const received = parseHubReceivedTime(value);
+      if (!received) return null;
+      const elapsed = Date.now() - received.getTime();
+      return elapsed < 0 ? null : Math.floor(elapsed / 86400000);
+    }
+
+    function switchTab(name) {
+      ['dashboard', 'comparator', 'history'].forEach((t) => {
+        const view = $(`view-${t}`);
+        if (view) view.classList.toggle('hidden', t !== name);
+        const tab = $(`tab-${t}`);
+        if (tab) tab.classList.toggle('tab-active', t === name);
+      });
+    }
+
+    function updateKPIs() {
+      const list = stckOrders.filter((o) => o.status === 'Hub_Received');
+      $('kpi-total').textContent = list.length;
+      $('kpi-risk-critical').textContent = list.filter((o) => {
+        const d = calculateDaysInHub(o.receivedTime);
+        return d !== null && d >= 12 && d <= 15;
+      }).length;
+      $('kpi-pending-ativo').textContent = list.filter((o) => o.ativoStatus !== 'Solucionado').length;
+      $('kpi-resolved').textContent = list.filter((o) => o.ativoStatus === 'Solucionado').length;
+    }
+
+    function applyFilters() {
+      const query = $('search-input').value.trim().toLowerCase();
+      const hub = $('filter-hub-status').value;
+      const ativo = $('filter-ativo-status').value;
+      const risk = $('filter-risk').value;
+
+      const filtered = stckOrders.filter((o) => {
+        if (hub !== 'ALL' && o.status !== hub) return false;
+        if (ativo && o.ativoStatus !== ativo) return false;
+        if (query && !`${o.orderSn} ${o.trackingNo} ${o.buyerName} ${o.station} ${o.returnDest}`.toLowerCase().includes(query)) return false;
+
+        const d = calculateDaysInHub(o.receivedTime);
+        if (risk === 'DATA_INVALIDA' && d !== null) return false;
+        if (risk === 'CRITICO' && (d === null || d < 12 || d > 15)) return false;
+        if (risk === 'ALERTA' && (d === null || d < 8 || d > 11)) return false;
+        if (risk === 'SEGURO' && (d === null || d > 7)) return false;
+        if (risk === 'LOST' && (d === null || d <= 15)) return false;
+
+        return true;
+      }).sort((a, b) => (calculateDaysInHub(b.receivedTime) ?? -1) - (calculateDaysInHub(a.receivedTime) ?? -1));
+
+      $('filtered-count-badge').textContent = `${filtered.length} encomendas`;
+      renderTable(filtered);
+      updateKPIs();
+      $('select-all').checked = false;
+    }
+
+    function resetFilters() {
+      $('search-input').value = '';
+      $('filter-hub-status').value = 'Hub_Received';
+      $('filter-ativo-status').value = '';
+      $('filter-risk').value = '';
+      applyFilters();
+    }
+
+    function makeCell(tr, text) {
+      const td = document.createElement('td');
+      td.className = 'p-3';
+      td.textContent = text;
+      tr.append(td);
+      return td;
+    }
+
+    function renderTable(rows) {
+      const body = $('stuck-table-body');
+      body.replaceChildren();
+      $('table-empty').classList.toggle('hidden', rows.length > 0);
+
+      for (const o of rows) {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50';
+
+        const selectCell = makeCell(tr, '');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'row-checkbox';
+        cb.value = o.orderSn;
+        selectCell.append(cb);
+
+        const idsCell = makeCell(tr, '');
+        const id = document.createElement('strong');
+        id.className = 'font-mono';
+        id.textContent = o.orderSn;
+        const tracking = document.createElement('div');
+        tracking.className = 'text-slate-400';
+        tracking.textContent = o.trackingNo || 'N/A';
+        idsCell.append(id, tracking);
+
+        const buyerCell = makeCell(tr, o.buyerName || 'Não informado');
+        const phone = document.createElement('div');
+        phone.className = 'text-slate-400';
+        phone.textContent = o.buyerPhone || 'Sem telefone';
+        buyerCell.append(phone);
+
+        makeCell(tr, `${o.station || 'Estação'} / ${o.returnDest || 'SOC'}`);
+
+        const days = calculateDaysInHub(o.receivedTime);
+        const dayText = days === null ? 'DATA INVÁLIDA/FUTURA' : `${days} dia(s)`;
+        const riskTag = days === null ? 'DATA INVÁLIDA' : days > 15 ? 'LOST' : days >= 12 ? 'CRÍTICO' : days >= 8 ? 'ALERTA' : 'SEGURO';
+        makeCell(tr, `${o.receivedTime || 'Data ausente'} — ${dayText} • ${riskTag}`);
+        makeCell(tr, o.status);
+        makeCell(tr, o.ativoStatus);
+
+        const actionCell = makeCell(tr, '');
+        const b = document.createElement('button');
+        b.className = 'px-3 py-1.5 rounded-lg bg-shopee text-white font-bold';
+        b.textContent = 'Fazer ativo';
+        b.onclick = () => openAtivoModal(o.orderSn);
+        actionCell.append(b);
+
+        body.append(tr);
+      }
+    }
+
+    function toggleSelectAll(master) {
+      document.querySelectorAll('.row-checkbox').forEach((cb) => cb.checked = master.checked);
+    }
+
+    function bulkMarkStatus(status) {
+      const ids = new Set([...document.querySelectorAll('.row-checkbox:checked')].map((cb) => cb.value));
+      if (!ids.size) {
+        showToast('Selecione ao menos uma encomenda.', 'info');
+        return;
+      }
+
+      stckOrders.filter((o) => ids.has(o.orderSn)).forEach((o) => {
+        o.ativoStatus = status;
+        o.history.unshift({ date: new Date().toLocaleString('pt-BR'), note: `[Status: ${status}] Atualização em lote.` });
+      });
+
+      if (saveData()) applyFilters();
+    }
+
+    function parseCSVRows(text) {
+      text = String(text).replace(/^\uFEFF/, '');
+      const first = text.split(/\r?\n/, 1)[0] || '';
+      const delimiter = [',', ';', '\t']
+        .map((c) => ({ c, n: first.split(c).length - 1 }))
+        .sort((a, b) => b.n - a.n)[0].c;
+
+      const rows = [];
+      let row = [], field = '', quoted = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (quoted) {
+          if (ch === '"' && text[i + 1] === '"') {
+            field += '"';
+            i++;
+          } else if (ch === '"') {
+            quoted = false;
+          } else {
+            field += ch;
+          }
+        } else if (ch === '"' && field === '') {
+          quoted = true;
+        } else if (ch === delimiter) {
+          row.push(field); field = '';
+        } else if (ch === '\r' || ch === '\n') {
+          if (ch === '\r' && text[i + 1] === '\n') i++;
+          row.push(field);
+          if (row.some((v) => v.trim())) rows.push(row);
+          row = [];
+          field = '';
+        } else {
+          field += ch;
+        }
+      }
+
+      row.push(field);
+      if (row.some((v) => v.trim())) rows.push(row);
+      return rows;
+    }
+
+    function headerKey(v) {
+      return String(v || '')
+        .replace(/^\uFEFF/, '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function parseCSV(text) {
+      let rows;
+      try {
+        rows = parseCSVRows(text);
+      } catch (e) {
+        showToast(e.message, 'info');
+        return false;
+      }
+
+      if (rows.length < 2) {
+        showToast('CSV inválido ou sem linhas de dados.', 'info');
+        return false;
+      }
+
+      const header = rows[0].map(headerKey);
+      const exact = (name) => header.indexOf(headerKey(name));
+      const col = {
+        order: exact('Order ID'),
+        tracking: exact('SLS Tracking Number'),
+        buyer: exact('Buyer Name'),
+        phone: exact('Buyer Phone'),
+        received: exact('Current Station Received Time'),
+        station: exact('Current Station'),
+        dest: exact('Return Destination'),
+        status: exact('Status')
+      };
+
+      if (col.order < 0 || col.received < 0) {
+        showToast('CSV inválido: faltou Order ID ou Current Station Received Time.', 'info');
+        return false;
+      }
+
+      const previousSet = new Set(stckOrders.map((o) => o.orderSn.toUpperCase()));
+      const imported = [];
+      let invalidCount = 0;
+      let importedCount = 0;
+      let newCount = 0;
+
+      for (const row of rows.slice(1)) {
+        const get = (i) => i < 0 ? '' : String(row[i] ?? '').trim();
+        const orderSn = get(col.order);
+        if (!orderSn) continue;
+
+        importedCount += 1;
+        const receivedTime = get(col.received);
+        if (!parseHubReceivedTime(receivedTime)) invalidCount += 1;
+
+        const fields = {
+          orderSn,
+          trackingNo: get(col.tracking),
+          buyerName: get(col.buyer),
+          buyerPhone: get(col.phone),
+          receivedTime,
+          status: get(col.status) || 'Hub_Received',
+          station: get(col.station) || 'Hub',
+          returnDest: get(col.dest) || 'SOC'
+        };
+
+        const existing = stckOrders.find((o) => o.orderSn.toUpperCase() === orderSn.toUpperCase());
+        if (existing) {
+          Object.assign(existing, fields);
+          continue;
+        }
+
+        if (!previousSet.has(orderSn.toUpperCase())) {
+          newCount += 1;
+          previousSet.add(orderSn.toUpperCase());
+        }
+
+        imported.push({ ...fields, ativoStatus: 'Pendente', history: [] });
+      }
+
+      if (!imported.length && !stckOrders.length) {
+        showToast('Nenhum pedido válido encontrado.', 'info');
+        return false;
+      }
+
+      stckOrders = [...imported, ...stckOrders];
+
+      if (!saveData()) return false;
+
+      const importStamp = new Date().toLocaleString('pt-BR');
+      localStorage.setItem(IMPORT_KEY, importStamp);
+      updateLastImportDisplay(importStamp);
+
+      registerHistoryImport(importedCount, newCount, stckOrders.filter((o) => o.status === 'Hub_Received').length);
+      applyFilters();
+      renderHistory();
+
+      showToast(`Importados ${imported.length} novos e atualizados dados existentes. Datas inválidas/vazias: ${invalidCount}.`);
+      return true;
+    }
+
+    function handleCSVUpload(event) {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) return;
+      if (!/\.csv$/i.test(file.name)) {
+        showToast('Selecione um arquivo CSV.', 'info');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onerror = () => showToast('Erro ao ler o CSV.', 'info');
+      reader.onload = () => {
+        parseCSV(reader.result);
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    function csvField(value) {
+      let s = String(value ?? '');
+      if (/^[\s]*[=+@]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+
+    function exportCleanedCSV() {
+      if (!stckOrders.length) {
+        showToast('Nenhum dado para exportar.', 'info');
+        return;
+      }
+
+      const rows = [
+        ['Order ID', 'SLS Tracking Number', 'Buyer Name', 'Buyer Phone', 'Current Station Received Time', 'Current Station', 'Return Destination', 'Status', 'Status Ativo', 'Última Tratativa'],
+        ...stckOrders.map((o) => [o.orderSn, o.trackingNo, o.buyerName, o.buyerPhone, o.receivedTime, o.station, o.returnDest, o.status, o.ativoStatus, o.history?.[0]?.note || ''])
+      ];
+
+      const blob = new Blob(['\uFEFF' + rows.map((r) => r.map(csvField).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tratativas_stuck_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function compareOrderIDs() {
+      const ids = [...new Set($('comparator-input').value.split(/[\s,;]+/).map((x) => x.trim().toUpperCase()).filter(Boolean))];
+      if (!ids.length) {
+        showToast('Cole ao menos um Order ID.', 'info');
+        return;
+      }
+
+      lastComparisonDone = [];
+      lastComparisonPending = [];
+
+      const map = new Map();
+      stckOrders.forEach((o) => {
+        map.set(o.orderSn.toUpperCase(), o);
+        if (o.trackingNo) map.set(o.trackingNo.toUpperCase(), o);
+      });
+
+      ids.forEach((id) => {
+        const order = map.get(id);
+        if (order && order.ativoStatus === 'Solucionado') {
+          lastComparisonDone.push({ inputID: id, order });
+        } else {
+          lastComparisonPending.push({ inputID: id, order: order || null, foundInSystem: !!order });
+        }
+      });
+
+      $('comp-total-count').textContent = ids.length;
+      $('comp-done-count').textContent = lastComparisonDone.length;
+      $('comp-pending-count').textContent = lastComparisonPending.length;
+      $('done-header-count').textContent = lastComparisonDone.length;
+      $('pending-header-count').textContent = lastComparisonPending.length;
+
+      renderComparatorLists();
+      $('comparator-summary').classList.remove('hidden');
+      $('comparator-results').classList.remove('hidden');
+    }
+
+    function renderComparatorLists() {
+      const cases = [
+        ['done', lastComparisonDone, $('comp-list-done')],
+        ['pending', lastComparisonPending, $('comp-list-pending')]
+      ];
+
+      for (const [type, items, container] of cases) {
+        container.replaceChildren();
+        if (!items.length) {
+          container.textContent = type === 'done' ? 'Nenhum pedido solucionado.' : 'Nenhum pedido pendente.';
+          continue;
+        }
+
+        items.forEach((item) => {
+          const card = document.createElement('div');
+          card.className = 'bg-white rounded-lg border p-3 flex justify-between gap-3';
+          const info = document.createElement('span');
+          info.textContent = item.order ? `${item.order.orderSn} — ${item.order.buyerName || 'Cliente'} (${item.order.ativoStatus})` : item.inputID;
+          card.append(info);
+
+          if (item.order) {
+            const btn = document.createElement('button');
+            btn.textContent = 'Ver';
+            btn.className = 'text-shopee font-bold';
+            btn.onclick = () => openAtivoModal(item.order.orderSn);
+            card.append(btn);
+          }
+
+          container.append(card);
+        });
+      }
+    }
+
+    function clearComparator() {
+      $('comparator-input').value = '';
+      $('comparator-summary').classList.add('hidden');
+      $('comparator-results').classList.add('hidden');
+      lastComparisonDone = [];
+      lastComparisonPending = [];
+    }
+
+    async function copyList(type) {
+      const list = (type === 'done' ? lastComparisonDone : lastComparisonPending).map((i) => i.inputID);
+      if (!list.length) {
+        showToast('Lista vazia.', 'info');
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(list.join('\n'));
+        showToast(`${list.length} ID(s) copiado(s).`);
+      } catch (e) {
+        showToast('Não foi possível copiar.', 'info');
+      }
+    }
+
+    function openAtivoModal(id) {
+      const o = stckOrders.find((x) => x.orderSn === id);
+      if (!o) return;
+
+      currentModalOrderSn = id;
+      $('m-order-sn').textContent = id;
+      $('m-tracking').textContent = o.trackingNo || 'N/A';
+
+      const d = calculateDaysInHub(o.receivedTime);
+      $('m-days-stuck').textContent = d === null ? `${o.receivedTime || 'Data indisponível'} — inválida/futura` : `${o.receivedTime} — ${d} dia(s)`;
+      $('m-buyer-name').textContent = o.buyerName || 'Cliente';
+      $('m-hub-station').textContent = o.station || 'Hub';
+      $('m-return-dest').textContent = o.returnDest || 'SOC';
+      $('m-buyer-phone-input').value = o.buyerPhone || '';
+      $('m-new-status').value = o.ativoStatus;
+      $('m-new-note').value = '';
+      applyTemplate('retirada');
+
+      const log = $('m-history-log');
+      log.replaceChildren();
+      if (o.history.length) {
+        o.history.forEach((h) => {
+          const p = document.createElement('p');
+          p.textContent = `[${h.date || 'Data'}] ${h.note || ''}`;
+          log.append(p);
+        });
+      } else {
+        log.textContent = 'Nenhuma tratativa registrada.';
+      }
+
+      $('modal-ativo').classList.remove('hidden');
+      $('modal-ativo').classList.add('flex');
+    }
+
+    function closeAtivoModal() {
+      $('modal-ativo').classList.add('hidden');
+      $('modal-ativo').classList.remove('flex');
+      currentModalOrderSn = null;
+    }
+
+    function applyTemplate(type) {
+      const o = stckOrders.find((x) => x.orderSn === currentModalOrderSn);
+      if (!o) return;
+
+      const name = o.buyerName || 'Cliente';
+      const msgs = {
+        retirada: `Olá ${name}! Seu pedido ${o.orderSn} encontra-se disponível para retirada na estação (${o.station || 'Hub'}). Por favor, confirme o recebimento ou retirada.`,
+        endereco: `Olá ${name}! Precisamos confirmar o endereço para finalizar a entrega do pedido ${o.orderSn}. Poderia nos enviar um ponto de referência?`,
+        reentrega: `Olá ${name}! Estamos tratando a reentrega do pedido ${o.orderSn}.`
+      };
+
+      $('m-message-text').value = msgs[type] || '';
+    }
+
+    async function copyMessageText() {
+      try {
+        await navigator.clipboard.writeText($('m-message-text').value);
+        showToast('Mensagem copiada.');
+      } catch (e) {
+        showToast('Não foi possível copiar.', 'info');
+      }
+    }
+
+    function triggerWhatsAppDirect() {
+      let phone = $('m-buyer-phone-input').value.replace(/\D/g, '');
+      if (phone.startsWith('55')) phone = phone.slice(2);
+      if (phone.length < 10 || phone.length > 11) {
+        showToast('Informe telefone com DDD (10 ou 11 dígitos).', 'info');
+        return;
+      }
+      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent($('m-message-text').value)}`, '_blank', 'noopener,noreferrer');
+    }
+
+    function saveAtivoTratativa() {
+      const o = stckOrders.find((x) => x.orderSn === currentModalOrderSn);
+      if (!o) {
+        showToast('Pedido não encontrado.', 'info');
+        closeAtivoModal();
+        return;
+      }
+
+      const status = $('m-new-status').value;
+      if (!ACTIVE_STATUSES.includes(status)) {
+        showToast('Status inválido.', 'info');
+        return;
+      }
+
+      o.ativoStatus = status;
+      o.buyerPhone = $('m-buyer-phone-input').value.trim();
+      o.history.unshift({ date: new Date().toLocaleString('pt-BR'), note: `[Status: ${status}] ${$('m-new-note').value.trim() || 'Tratativa atualizada.'}` });
+
+      if (saveData()) {
+        applyFilters();
+        closeAtivoModal();
+        showToast('Tratativa salva.');
+      }
+    }
+
+    function getWeekKey(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+    }
+
+    function formatWeekLabel(date) {
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const start = new Date(date);
+      const day = start.getDay();
+      const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(start.setDate(diff));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return `${monday.getDate()}/${monthNames[monday.getMonth()]} - ${sunday.getDate()}/${monthNames[sunday.getMonth()]}`;
+    }
+
+    function registerHistoryImport(importedRowsCount, newCount, totalHubReceived) {
+      const now = new Date();
+      const item = {
+        date: now.toISOString(),
+        dateLabel: now.toLocaleDateString('pt-BR'),
+        hourLabel: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        weekLabel: formatWeekLabel(now),
+        weekKey: getWeekKey(now),
+        monthLabel: now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        importedRows: importedRowsCount,
+        newOrders: newCount,
+        totalHubReceived
+      };
+
+      if (!historyData.imports) historyData.imports = [];
+      historyData.imports.push(item);
+      historyData.imports = historyData.imports.slice(-180);
+      saveHistoryData();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const summary = $('history-summary');
+      if (!summary) return;
+
+      const items = historyData.imports || [];
+      const totalImports = items.length;
+      const totalNew = items.reduce((acc, item) => acc + Number(item.newOrders || 0), 0);
+      const lastWeek = items.at(-1);
+      const currentHub = stckOrders.filter((o) => o.status === 'Hub_Received').length;
+
+      summary.innerHTML = `
+        <div class="bg-slate-50 rounded-xl p-3 border">
+          <div class="text-[11px] uppercase text-slate-500 font-semibold">Importações</div>
+          <div class="text-2xl font-extrabold mt-1">${totalImports}</div>
+          <div class="text-[11px] text-slate-500">arquivos registrados</div>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3 border">
+          <div class="text-[11px] uppercase text-slate-500 font-semibold">Novos no mês</div>
+          <div class="text-2xl font-extrabold mt-1 text-emerald-600">${totalNew}</div>
+          <div class="text-[11px] text-slate-500">pedidos descobertos</div>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3 border">
+          <div class="text-[11px] uppercase text-slate-500 font-semibold">Hub_Received hoje</div>
+          <div class="text-2xl font-extrabold mt-1 text-shopee">${currentHub}</div>
+          <div class="text-[11px] text-slate-500">atual</div>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3 border">
+          <div class="text-[11px] uppercase text-slate-500 font-semibold">Última importação</div>
+          <div class="text-lg font-extrabold mt-1">${lastWeek ? lastWeek.dateLabel : 'Sem dado'}</div>
+          <div class="text-[11px] text-slate-500">${lastWeek ? `${lastWeek.newOrders} novos / ${lastWeek.importedRows} linhas` : 'Nenhuma importação'}</div>
+        </div>
+      `;
+
+      const weeklyMap = new Map();
+      items.forEach((item) => {
+        const key = item.weekKey || getWeekKey(new Date(item.date));
+        if (!weeklyMap.has(key)) {
+          weeklyMap.set(key, { key, label: item.weekLabel, total: 0, newOrders: 0, imports: 0 });
+        }
+        const row = weeklyMap.get(key);
+        row.total += Number(item.totalHubReceived || 0);
+        row.newOrders += Number(item.newOrders || 0);
+        row.imports += 1;
+      });
+
+      const weeklyList = [...weeklyMap.values()].sort((a, b) => a.key.localeCompare(b.key)).slice(-8);
+      const maxValue = Math.max(...weeklyList.map((row) => row.total), 1);
+
+      const weeklyGrid = $('history-weekly-grid');
+      weeklyGrid.innerHTML = weeklyList.map((row) => {
+        const width = Math.max(12, (row.total / maxValue) * 100);
+        return `
+          <div class="rounded-xl border bg-slate-50 p-3">
+            <div class="flex justify-between text-xs font-semibold mb-2">
+              <span>${row.label}</span>
+              <span>${row.total} Hub_Received</span>
+            </div>
+            <div class="mini-bar" style="width:${width}%"></div>
+            <div class="mt-2 text-[11px] text-slate-500">${row.newOrders} novos • ${row.imports} importações</div>
+          </div>
+        `;
+      }).join('') || '<p class="text-xs text-slate-500">Ainda não há histórico de importações.</p>';
+
+      const historyBody = $('history-table-body');
+      if (!historyBody) return;
+      historyBody.innerHTML = items.length
+        ? items.slice().reverse().map((item) => `
+          <tr class="border-t">
+            <td class="p-2">${item.dateLabel}</td>
+            <td class="p-2">${item.weekLabel}</td>
+            <td class="p-2">${item.importedRows}</td>
+            <td class="p-2">${item.newOrders}</td>
+            <td class="p-2">${item.totalHubReceived}</td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="5" class="p-3 text-slate-500">Sem histórico.</td></tr>';
+    }
+
+    function exportHistoryBackup() {
+      if (!historyData.imports || !historyData.imports.length) {
+        showToast('Ainda não há histórico para exportar.', 'info');
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify(historyData, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `stuck_historico_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Backup do histórico exportado.');
+    }
+  </script>
 </body>
 </html>
