@@ -1,13 +1,20 @@
-# 📦 STUCK - Gestão SPX / Shopee
+# STUCK - Gestão de encomendas
 
-Ferramenta web para monitorizar pacotes com status **`Hub_Received`**, prevenindo que atinjam o limite de 15 dias e fiquem registados como **LOST**.
+Ferramenta web leve para importar relatórios em CSV e revisar pedidos por status, estação atual e tempo desde a recepção.
 
-## 🚀 Principais Recursos
-* **Contagem de Risco:** Alertas visuais para pacotes em limiar Crítico, Alerta ou Seguro (15 dias).
-* **Comparador de IDs:** Reconciliação rápida em lote por Order ID.
-* **Privacidade:** Processamento via CSV com dados gravados apenas no navegador (`localStorage`).
+## O que faz
+- Importa um CSV com o cabeçalho da planilha usada na operação.
+- Exibe apenas os campos essenciais: Order ID, rastreio, status, estação atual e data de recebimento.
+- Calcula a idade do pedido a partir do campo `Received Time` e destaca pedidos em situação crítica quando o status é `Hub_Received` ou `Hub_Assigned`.
+- Permite busca por pedido, rastreio ou estação e filtro por status.
+- Exporta um CSV reduzido com os campos essenciais.
 
-## 💻 Como Usar
-1. Abra a aplicação no GitHub Pages.
-2. Importe o relatório em **CSV** da Shopee/SPX.
-3. Acompanhe a lista de prioridades e realize os cruzamentos necessários.
+## Como usar
+1. Abra o arquivo `index.html` no navegador.
+2. Importe o CSV da operação.
+3. Use a busca e os filtros por status para focar os pedidos relevantes.
+4. Verifique os pedidos em destaque e exporte quando necessário.
+
+## Observações
+- Os dias mostrados são calculados a partir do campo `Received Time` e da data atual do navegador.
+- Os dados ficam apenas na memória da página enquanto a aba estiver aberta; não há armazenamento persistente nesta versão.
