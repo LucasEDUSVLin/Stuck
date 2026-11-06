@@ -48,13 +48,13 @@
         <input id="search" type="search" placeholder="Buscar pedido, rastreio ou estação" class="min-w-52 flex-1 rounded-lg border bg-slate-50 p-2 text-sm">
         <select id="status-filter" class="rounded-lg border bg-slate-50 p-2 text-sm"><option value="">Todos os status</option></select>
       </div>
-      <p class="mt-3 text-xs text-slate-500">Os dados exibidos vêm do CSV. Dias são calculados pela data de chegada e pela data de hoje, sem depender do horário.</p>
+      <p class="mt-3 text-xs text-slate-500">A idade é calculada usando a coluna “Current Station Received Time” (Q) e a data atual do navegador.</p>
     </section>
     <section class="overflow-hidden rounded-xl border bg-white">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-900 text-white"><tr>
-            <th class="p-3">Order ID</th><th class="p-3">Rastreio</th><th class="p-3">Status</th><th class="p-3">Estação atual</th><th class="p-3">Recebido / dias</th>
+            <th class="p-3">Order ID</th><th class="p-3">Rastreio</th><th class="p-3">Status</th><th class="p-3">Estação atual</th><th class="p-3">Recebido na estação / dias</th>
           </tr></thead>
           <tbody id="rows" class="divide-y"></tbody>
         </table>
@@ -66,7 +66,8 @@
   </main>
 <script>
 'use strict';
-const REQUIRED_HEADERS=['Order ID','SLS Tracking Number','Buyer Name','Received Time','Status','Current Station','Return Destination'];
+const DATE_COLUMN='Current Station Received Time';
+const REQUIRED_HEADERS=['Order ID','SLS Tracking Number','Buyer Name',DATE_COLUMN,'Status','Current Station','Return Destination'];
 let orders=[];
 const $=id=>document.getElementById(id);
 
@@ -86,6 +87,7 @@ function parseCSV(text){
       row=[];
     }else field+=ch;
   }
+  if(quoted)throw new Error('CSV inválido: há um campo entre aspas sem fechamento.');
   if(field!==''||row.length){row.push(field);if(row.some(cell=>cell.trim()!==''))rows.push(row);}
   if(!rows.length)throw new Error('O CSV está vazio.');
   const headers=rows[0].map(h=>h.trim());
@@ -137,17 +139,17 @@ function render(){
   const status=$('status-filter').value;
   const filtered=orders.filter(o=>(!status||(o.Status||'Sem status')===status)&&(!query||[o['Order ID'],o['SLS Tracking Number'],o['Current Station']].join(' ').toLocaleLowerCase('pt-BR').includes(query)));
   const critical=orders.filter(order=>{
-    const days=dayAge(order['Received Time']);
+    const days=dayAge(order[DATE_COLUMN]);
     return (order.Status==='Hub_Received'||order.Status==='Hub_Assigned')&&days!==null&&days>=12&&days<=15;
   }).length;
   $('total-count').textContent=String(orders.length);$('critical-count').textContent=String(critical);
   for(const order of filtered){
     const tr=document.createElement('tr');tr.className='hover:bg-slate-50';
     addCell(tr,order['Order ID']);addCell(tr,order['SLS Tracking Number']);
-    const statusCell=addCell(tr,order.Status);statusCell.className='p-3 font-semibold';
+    addCell(tr,order.Status).className='p-3 font-semibold';
     addCell(tr,order['Current Station']);
-    const days=dayAge(order['Received Time']);
-    addCell(tr,order['Received Time']?`${order['Received Time']}${days===null?'':` · ${days} dia(s)`}`:'—');
+    const days=dayAge(order[DATE_COLUMN]);
+    addCell(tr,order[DATE_COLUMN]?`${order[DATE_COLUMN]}${days===null?'':` · ${days} dia(s)`}`:'—');
     body.append(tr);
   }
   $('empty').classList.toggle('hidden',filtered.length>0);
@@ -160,7 +162,7 @@ $('import-button').addEventListener('click',()=>$('csv-file').click());
 $('csv-file').addEventListener('change',event=>{
   const file=event.target.files?.[0];event.target.value='';if(!file)return;
   const reader=new FileReader();
-  reader.onload=()=>{try{const parsed=parseCSV(reader.result);orders=parsed;$('file-name').textContent=file.name;const statuses=[...new Set(orders.map(o=>o.Status||'Sem status'))].sort((a,b)=>a.localeCompare(b,'pt-BR'));const select=$('status-filter');select.replaceChildren(new Option('Todos os status',''));statuses.forEach(s=>select.add(new Option(s,s)));render();renderStatusCounts();showMessage(`${orders.length} pedido(s) lido(s) do CSV. Os campos são exibidos conforme vieram na planilha.`);}catch(error){orders=[];$('file-name').textContent='Nenhum CSV importado';$('status-filter').replaceChildren(new Option('Todos os status',''));render();renderStatusCounts();showMessage(error.message,true);}};
+  reader.onload=()=>{try{const parsed=parseCSV(reader.result);orders=parsed;$('file-name').textContent=file.name;const statuses=[...new Set(orders.map(o=>o.Status||'Sem status'))].sort((a,b)=>a.localeCompare(b,'pt-BR'));const select=$('status-filter');select.replaceChildren(new Option('Todos os status',''));statuses.forEach(s=>select.add(new Option(s,s)));render();renderStatusCounts();showMessage(`${orders.length} pedido(s) lido(s) do CSV. A data usada é a coluna “${DATE_COLUMN}”.`);}catch(error){orders=[];$('file-name').textContent='Nenhum CSV importado';$('status-filter').replaceChildren(new Option('Todos os status',''));render();renderStatusCounts();showMessage(error.message,true);}};
   reader.onerror=()=>showMessage('Não foi possível ler o arquivo CSV.',true);
   reader.readAsText(file,'UTF-8');
 });
@@ -168,7 +170,7 @@ $('search').addEventListener('input',render);
 $('status-filter').addEventListener('change',()=>{render();renderStatusCounts();});
 $('clear-status').addEventListener('click',()=>{$('status-filter').value='';render();renderStatusCounts();});
 $('export-button').addEventListener('click',()=>{
-  const headers=['Order ID','SLS Tracking Number','Buyer Name','Received Time','Status','Current Station','Return Destination'];
+  const headers=['Order ID','SLS Tracking Number','Buyer Name',DATE_COLUMN,'Status','Current Station','Return Destination'];
   const quote=value=>'"'+String(value??'').replace(/"/g,'""')+'"';
   const csv=[headers,...orders.map(o=>headers.map(h=>o[h]))].map(row=>row.map(quote).join(',')).join('\r\n');
   const link=document.createElement('a');const url=URL.createObjectURL(new Blob(['\uFEFF',csv],{type:'text/csv;charset=utf-8'}));link.href=url;link.download='stuck_export.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
