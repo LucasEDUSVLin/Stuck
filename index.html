@@ -4,1110 +4,163 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STUCK — Gestão de encomendas</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23EE4D2D'/%3E%3Cpath d='M32 8L52 18v28L32 56 12 46V18L32 8zm0 10.5L20 22v20l12 6 12-6V22l-12-3.5zm-6 7.2h12v4H26v-4zm0 8h12v4H26v-4z' fill='white'/%3E%3C/svg%3E">
   <meta name="theme-color" content="#0F172A">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            shopee: { DEFAULT: '#EE4D2D', dark: '#D7381C', subtle: '#FFEBE7' },
-            stucknavy: { navy: '#0F172A' }
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif']
-          }
-        }
-      }
-    };
-  </script>
   <style>
-    body { font-family: Inter, sans-serif; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    .tab-active { border-bottom: 3px solid #EE4D2D; color: #0F172A; }
-    .status-pill { display: inline-flex; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 10px; font-weight: 700; }
-    .status-hub { background: #fff1f2; color: #be123c; }
-    .status-hold { background: #fef3c7; color: #92400e; }
-    .status-delivering { background: #e0f2fe; color: #075985; }
-    .status-soc { background: #ecfccb; color: #365314; }
-    .status-default { background: #f1f5f9; color: #334155; }
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .pill{display:inline-flex;border-radius:9999px;padding:.2rem .55rem;font-size:.7rem;font-weight:700;white-space:nowrap}
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
-  <div id="toast-container" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-2 pointer-events-none" aria-live="polite"></div>
-
-  <header class="bg-stucknavy-navy text-white shadow-lg sticky top-0 z-30 border-b-2 border-shopee">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-      <div class="bg-shopee px-4 py-1.5 rounded-xl font-black text-xl tracking-wider flex items-center gap-2">
-        <i data-lucide="package-search" class="w-6 h-6"></i>STUCK
+<body class="min-h-screen bg-slate-100 text-slate-800">
+  <header class="sticky top-0 z-10 border-b-2 border-orange-500 bg-slate-900 text-white shadow">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div class="flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-lg font-black tracking-wide">
+        <svg aria-hidden="true" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 8-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22v-10"/></svg>
+        STUCK
       </div>
-      <div class="flex items-center gap-3">
-        <div class="hidden sm:block text-xs text-slate-300">
-          <span class="text-slate-400">Última importação:</span>
-          <strong id="header-last-import">Nenhum ficheiro importado</strong>
-        </div>
-        <div class="flex items-center gap-2">
-          <input id="csv-file-input" type="file" accept=".csv,text/csv" class="hidden" onchange="handleCSVUpload(event)">
-          <button onclick="document.getElementById('csv-file-input').click()" class="bg-shopee hover:bg-shopee-dark text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-            <i data-lucide="upload" class="w-4 h-4"></i>
-            <span>Importar CSV</span>
-          </button>
-          <button onclick="exportCleanedCSV()" class="bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-            <i data-lucide="download" class="w-4 h-4"></i>
-            <span>Exportar</span>
-          </button>
-        </div>
+      <div class="flex gap-2">
+        <input id="csv-file" class="hidden" type="file" accept=".csv,text/csv">
+        <button id="import-button" class="flex items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-bold hover:bg-orange-700">
+          <svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m-4 4 4-4 4 4M4 20h16"/></svg>Importar CSV
+        </button>
+        <button id="export-button" class="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm font-bold hover:bg-slate-600" disabled>
+          <svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v12m-4-4 4 4 4-4M4 20h16"/></svg>Exportar CSV
+        </button>
       </div>
     </div>
   </header>
-
-  <div class="sm:hidden bg-slate-900 text-slate-300 px-4 py-1.5 text-[11px] flex justify-between">
-    <span>Última importação:</span>
-    <strong id="header-last-import-mobile" class="text-shopee">Nenhum ficheiro importado</strong>
-  </div>
-
-  <div class="bg-white border-b shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
-      <nav class="flex gap-6 text-sm overflow-x-auto">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3.5 px-1 tab-active whitespace-nowrap">Gestão STUCK</button>
-        <button onclick="switchTab('comparator')" id="tab-comparator" class="py-3.5 px-1 whitespace-nowrap">Comparador de Order IDs</button>
-        <button onclick="switchTab('history')" id="tab-history" class="py-3.5 px-1 whitespace-nowrap">Evolução por semana</button>
-      </nav>
-      <span class="hidden lg:block text-xs text-slate-500">Histórico local neste navegador</span>
-    </div>
-  </div>
-
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
-    <section id="view-dashboard" class="space-y-5">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl p-4 border shadow-sm">
-          <p class="text-xs font-semibold text-slate-500 uppercase">Total STUCK</p>
-          <strong id="kpi-total" class="text-2xl">0</strong>
-          <p class="text-xs text-shopee">Todas as mercadorias paradas</p>
-        </div>
-        <div class="bg-white rounded-2xl p-4 border shadow-sm">
-          <p class="text-xs font-semibold text-slate-500 uppercase">Hub_Received crítico</p>
-          <strong id="kpi-risk-critical" class="text-2xl text-rose-600">0</strong>
-          <p class="text-xs text-rose-600">Próximo do limite</p>
-        </div>
-        <div class="bg-white rounded-2xl p-4 border shadow-sm">
-          <p class="text-xs font-semibold text-slate-500 uppercase">Pendentes de ativo</p>
-          <strong id="kpi-pending-ativo" class="text-2xl text-amber-600">0</strong>
-          <p class="text-xs text-amber-600">Ainda não solucionados</p>
-        </div>
-        <div class="bg-white rounded-2xl p-4 border shadow-sm">
-          <p class="text-xs font-semibold text-slate-500 uppercase">Tratados / liberados</p>
-          <strong id="kpi-resolved" class="text-2xl text-emerald-600">0</strong>
-          <p class="text-xs text-emerald-600">Status solucionado</p>
-        </div>
-      </div>
-
-      <section class="bg-white rounded-2xl p-4 border shadow-sm space-y-3">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          <input id="search-input" oninput="applyFilters()" placeholder="Pesquisar pedido, rastreio, comprador ou estação" class="lg:col-span-2 p-2 bg-slate-50 border rounded-xl text-xs">
-          <select id="filter-hub-status" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs">
-            <option value="ALL">Todos os status</option>
-            <option value="Hub_Received">Hub_Received</option>
-            <option value="Hub_Assigned">Hub_Assigned</option>
-            <option value="Delivering">Delivering</option>
-            <option value="OnHold">OnHold</option>
-            <option value="SOC_Packed">SOC_Packed</option>
-            <option value="SOC_Received">SOC_Received</option>
-            <option value="Normal">Normal</option>
-          </select>
-          <select id="filter-ativo-status" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs">
-            <option value="">Todos os status de ativo</option>
-            <option>Pendente</option>
-            <option>Em Andamento</option>
-            <option>Aguardando Retirada</option>
-            <option>Reentrega Solicitada</option>
-            <option>Solucionado</option>
-            <option>Sem Resposta</option>
-          </select>
-          <select id="filter-risk" onchange="applyFilters()" class="p-2 bg-slate-50 border rounded-xl text-xs">
-            <option value="">Qualquer risco</option>
-            <option value="CRITICO">Crítico (12–15 dias)</option>
-            <option value="ALERTA">Alerta (8–11 dias)</option>
-            <option value="SEGURO">Seguro (0–7 dias)</option>
-            <option value="DATA_INVALIDA">Data inválida/futura</option>
-            <option value="LOST">LOST</option>
-          </select>
-        </div>
-
-        <div class="flex flex-wrap justify-between items-center gap-2 text-xs border-t pt-3">
-          <span>A exibir: <strong id="filtered-count-badge" class="text-shopee">0 encomendas</strong></span>
-          <div class="flex gap-2 flex-wrap">
-            <button onclick="resetFilters()" class="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold">Limpar filtros</button>
-            <button onclick="bulkMarkStatus('Solucionado')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold">Marcar selecionados como solucionado</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead class="bg-slate-900 text-white text-[11px] uppercase">
-              <tr>
-                <th class="p-3"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" aria-label="Selecionar todos"></th>
-                <th class="p-3">Order ID / Rastreio</th>
-                <th class="p-3">Comprador</th>
-                <th class="p-3">Estação / destino</th>
-                <th class="p-3">Chegada à estação / dias</th>
-                <th class="p-3">Status</th>
-                <th class="p-3">Status ativo</th>
-                <th class="p-3">Ação</th>
-              </tr>
-            </thead>
-            <tbody id="stuck-table-body" class="divide-y text-xs"></tbody>
-          </table>
-        </div>
-        <div id="table-empty" class="hidden py-14 text-center">
-          <h3 class="font-bold">Nenhuma encomenda encontrada</h3>
-          <p class="text-xs text-slate-500 mt-1">Importe um relatório CSV ou ajuste os filtros.</p>
-        </div>
-      </section>
+  <main class="mx-auto max-w-7xl space-y-4 px-4 py-6">
+    <section class="grid gap-3 sm:grid-cols-3">
+      <div class="rounded-xl border bg-white p-4"><p class="text-xs font-semibold uppercase text-slate-500">Linhas importadas</p><strong id="total-count" class="text-2xl">0</strong></div>
+      <div class="rounded-xl border bg-white p-4"><p class="text-xs font-semibold uppercase text-slate-500">Hub_Received / Hub_Assigned críticos</p><strong id="critical-count" class="text-2xl text-rose-600">0</strong></div>
+      <div class="rounded-xl border bg-white p-4"><p class="text-xs font-semibold uppercase text-slate-500">Arquivo</p><strong id="file-name" class="block truncate text-sm">Nenhum CSV importado</strong></div>
     </section>
-
-    <section id="view-comparator" class="hidden">
-      <div class="bg-white rounded-2xl p-6 border shadow-sm space-y-5">
-        <div class="flex flex-wrap justify-between gap-3">
-          <div>
-            <h2 class="font-extrabold text-lg">Comparador de Order IDs</h2>
-            <p class="text-xs text-slate-500">Valida rapidamente quais pedidos já foram tratados ou continuam pendentes.</p>
-          </div>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-3">
-          <textarea id="comparator-input" rows="5" class="w-full border rounded-xl p-3 text-xs" placeholder="Cole um ou mais Order IDs separados por espaço, vírgula ou quebra de linha"></textarea>
-          <div class="flex flex-col gap-2 sm:w-52">
-            <button onclick="compareOrderIDs()" class="rounded-xl bg-shopee text-white px-4 py-3 text-xs font-bold">Comparar</button>
-            <button onclick="clearComparator()" class="rounded-xl bg-slate-200 text-slate-700 px-4 py-3 text-xs font-bold">Limpar</button>
-          </div>
-        </div>
-
-        <div id="comparator-summary" class="hidden grid grid-cols-3 gap-3 text-xs">
-          <div class="bg-slate-50 border rounded-xl p-3"><p class="text-slate-500">Total</p><strong id="comp-total-count" class="text-lg">0</strong></div>
-          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3"><p class="text-emerald-700">Tratados</p><strong id="comp-done-count" class="text-lg">0</strong></div>
-          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3"><p class="text-amber-700">Pendentes</p><strong id="comp-pending-count" class="text-lg">0</strong></div>
-        </div>
-
-        <div id="comparator-results" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
-          <div class="border rounded-xl overflow-hidden">
-            <div class="bg-slate-900 text-white px-3 py-2 font-bold flex justify-between"><span>Tratados</span><span id="done-header-count">0</span></div>
-            <ul id="comp-list-done" class="divide-y bg-white"></ul>
-          </div>
-          <div class="border rounded-xl overflow-hidden">
-            <div class="bg-amber-500 text-white px-3 py-2 font-bold flex justify-between"><span>Pendentes</span><span id="pending-header-count">0</span></div>
-            <ul id="comp-list-pending" class="divide-y bg-white"></ul>
-          </div>
-        </div>
+    <p id="message" role="status" class="hidden rounded-lg border p-3 text-sm"></p>
+    <section class="rounded-xl border bg-white p-4">
+      <div class="flex flex-wrap gap-2">
+        <input id="search" type="search" placeholder="Buscar pedido, rastreio ou estação" class="min-w-52 flex-1 rounded-lg border bg-slate-50 p-2 text-sm">
+        <select id="status-filter" class="rounded-lg border bg-slate-50 p-2 text-sm"><option value="">Todos os status</option></select>
       </div>
+      <p class="mt-3 text-xs text-slate-500">Os dados exibidos vêm do CSV. Dias são calculados pela data de chegada e pela data de hoje, sem depender do horário.</p>
     </section>
-
-    <section id="view-history" class="hidden space-y-5">
-      <div class="bg-white rounded-2xl p-6 border shadow-sm">
-        <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
-          <div>
-            <h2 class="font-extrabold text-lg">Evolução por semana</h2>
-            <p class="text-xs text-slate-500">Histórico local das importações de STUCK.</p>
-          </div>
-        </div>
-        <div class="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 mb-5">Os dados ficam neste perfil de navegador. Exporte o backup regularmente; não é sincronizado com a nuvem.</div>
-        <div id="history-summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5"></div>
-        <div id="history-weekly-grid" class="space-y-3"></div>
+    <section class="overflow-hidden rounded-xl border bg-white">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-900 text-white"><tr>
+            <th class="p-3">Order ID</th><th class="p-3">Rastreio</th><th class="p-3">Comprador</th><th class="p-3">Estação atual</th><th class="p-3">Destino de retorno</th><th class="p-3">Received Time / dias</th><th class="p-3">Status</th><th class="p-3">Faixa de dias</th>
+          </tr></thead>
+          <tbody id="rows" class="divide-y"></tbody>
+        </table>
       </div>
-
-      <div class="bg-white rounded-2xl p-6 border shadow-sm">
-        <h3 class="font-bold text-base mb-3">Importações registradas</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-900 text-white">
-              <tr>
-                <th class="p-2">Data</th>
-                <th class="p-2">Linhas</th>
-                <th class="p-2">Novos</th>
-                <th class="p-2">Total STUCK</th>
-                <th class="p-2">Última importação</th>
-              </tr>
-            </thead>
-            <tbody id="history-table-body"></tbody>
-          </table>
-        </div>
-      </div>
+      <p id="empty" class="p-8 text-center text-sm text-slate-500">Importe o CSV para visualizar os pedidos.</p>
+      <p id="shown-count" class="border-t p-3 text-xs text-slate-500"></p>
     </section>
+    <p class="text-xs text-slate-500">Os dados ficam apenas nesta página enquanto ela estiver aberta; não são enviados nem salvos no navegador.</p>
   </main>
-
-  <div id="modal-ativo" class="hidden fixed inset-0 z-50 bg-black/60 p-4 items-center justify-center" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="border-b px-5 py-4 flex justify-between items-center">
-        <div>
-          <h3 class="font-extrabold text-lg">Atualizar tratativa</h3>
-          <p class="text-xs text-slate-500">Pedido e dados do cliente</p>
-        </div>
-        <button onclick="closeAtivoModal()" class="text-slate-500 hover:text-slate-700 font-bold">✕</button>
-      </div>
-      <div class="p-5 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div class="bg-slate-50 border rounded-xl p-3"><p class="text-slate-500">Order ID</p><strong id="m-order-sn" class="text-sm"></strong></div>
-          <div class="bg-slate-50 border rounded-xl p-3"><p class="text-slate-500">Tracking</p><strong id="m-tracking" class="text-sm"></strong></div>
-          <div class="bg-slate-50 border rounded-xl p-3"><p class="text-slate-500">Comprador</p><strong id="m-buyer-name" class="text-sm"></strong></div>
-          <div class="bg-slate-50 border rounded-xl p-3"><p class="text-slate-500">Dias no STUCK</p><strong id="m-days-stuck" class="text-sm"></strong></div>
-          <div class="bg-slate-50 border rounded-xl p-3"><p class="text-slate-500">Estação</p><strong id="m-hub-station" class="text-sm"></strong></div>
-          <div class="bg-slate-50 border rounded-xl p-3"><p class="text-slate-500">Destino</p><strong id="m-return-dest" class="text-sm"></strong></div>
-        </div>
-
-        <div class="space-y-3">
-          <label class="text-xs font-bold text-slate-700">Status ativo</label>
-          <select id="m-new-status" class="w-full border rounded-xl p-2 text-xs">
-            <option>Pendente</option>
-            <option>Em Andamento</option>
-            <option>Aguardando Retirada</option>
-            <option>Reentrega Solicitada</option>
-            <option>Solucionado</option>
-            <option>Sem Resposta</option>
-          </select>
-        </div>
-
-        <div class="space-y-3">
-          <label class="text-xs font-bold text-slate-700">Observação</label>
-          <input id="m-new-note" class="w-full border rounded-xl p-2 text-xs" placeholder="Ex.: contato realizado, retirada agendada, devolução encaminhada...">
-        </div>
-
-        <div class="space-y-3">
-          <label class="text-xs font-bold text-slate-700">Telefone do comprador</label>
-          <input id="m-buyer-phone-input" class="w-full border rounded-xl p-2 text-xs" placeholder="(DD) 9xxxx-xxxx">
-        </div>
-
-        <div class="space-y-3">
-          <label class="text-xs font-bold text-slate-700">Mensagem pronta</label>
-          <textarea id="m-message-text" rows="6" class="w-full border rounded-xl p-3 text-xs"></textarea>
-        </div>
-
-        <div class="flex flex-wrap gap-2">
-          <button onclick="applyTemplate('retirada')" class="bg-slate-200 hover:bg-slate-300 rounded-lg px-3 py-2 text-xs font-bold">Template retirada</button>
-          <button onclick="applyTemplate('contato')" class="bg-slate-200 hover:bg-slate-300 rounded-lg px-3 py-2 text-xs font-bold">Template contato</button>
-          <button onclick="copyMessageText()" class="bg-shopee hover:bg-shopee-dark text-white rounded-lg px-3 py-2 text-xs font-bold">Copiar mensagem</button>
-          <button onclick="triggerWhatsAppDirect()" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-3 py-2 text-xs font-bold">Abrir WhatsApp</button>
-        </div>
-
-        <div class="space-y-2">
-          <label class="text-xs font-bold text-slate-700">Histórico</label>
-          <div id="m-history-log" class="bg-slate-50 border rounded-xl p-3 text-xs text-slate-600 max-h-52 overflow-y-auto"></div>
-        </div>
-
-        <div class="flex justify-end gap-2 pt-2">
-          <button onclick="closeAtivoModal()" class="rounded-xl bg-slate-200 text-slate-700 px-4 py-2 text-xs font-bold">Cancelar</button>
-          <button onclick="saveAtivoTratativa()" class="rounded-xl bg-shopee text-white px-4 py-2 text-xs font-bold">Salvar tratativa</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 <script>
 'use strict';
-const STORAGE_KEY='stuck_orders_data';
-const IMPORT_KEY='stuck_last_import_time';
-const HISTORY_KEY='stuck_history_data';
-const ACTIVE_STATUSES=['Pendente','Em Andamento','Aguardando Retirada','Reentrega Solicitada','Solucionado','Sem Resposta'];
-let stckOrders=[], historyData={imports:[]}, currentModalOrderSn=null, lastComparisonDone=[], lastComparisonPending=[];
+const REQUIRED_HEADERS=['Order ID','SLS Tracking Number','Buyer Name','Received Time','Status','Current Station','Return Destination'];
+let orders=[];
 const $=id=>document.getElementById(id);
 
-document.addEventListener('DOMContentLoaded',()=>{
-  try{
-    const stored=localStorage.getItem(STORAGE_KEY);
-    if(stored){
-      const parsed=JSON.parse(stored);
-      if(Array.isArray(parsed)) stckOrders=parsed.map(normalizeOrder).filter(Boolean);
-    }
-    const savedHistory=localStorage.getItem(HISTORY_KEY);
-    if(savedHistory){
-      const parsedHistory=JSON.parse(savedHistory);
-      if(parsedHistory && Array.isArray(parsedHistory.imports)) historyData=parsedHistory;
-    }
-    const lastStamp=localStorage.getItem(IMPORT_KEY);
-    if(lastStamp) updateLastImportDisplay(lastStamp);
-  } catch(e) {
-    console.error('Erro ao restaurar dados do localStorage:', e);
-  }
-
-  resetFilters();
-  renderHistory();
-  updateKPIs();
-  updateLastImportDisplay(localStorage.getItem(IMPORT_KEY) || 'Nenhum ficheiro importado');
-  if($('stuck-table-body')) renderTable(stckOrders);
-});
-
-function normalizeOrder(o){
-  if(!o || typeof o !== 'object' || !o.orderSn) return null;
-  return {
-    ...o,
-    orderSn:String(o.orderSn),
-    trackingNo:String(o.trackingNo||''),
-    buyerName:String(o.buyerName||''),
-    buyerPhone:String(o.buyerPhone||''),
-    receivedTime:String(o.receivedTime||''),
-    status:String(o.status||'Hub_Received').trim() || 'Hub_Received',
-    station:String(o.station||''),
-    returnDest:String(o.returnDest||''),
-    ativoStatus:String(o.ativoStatus||'Pendente'),
-    history:Array.isArray(o.history)?o.history:[]
-  };
-}
-
-function saveData(){
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stckOrders));
-    updateKPIs();
-    return true;
-  } catch (e) {
-    console.error(e);
-    showToast('Não foi possível salvar. O armazenamento pode estar cheio.', 'info');
-    return false;
-  }
-}
-
-function saveHistoryData(){
-  try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(historyData));
-    return true;
-  } catch (e) {
-    console.error(e);
-    showToast('Histórico cheio ou indisponível. Exporte o backup e liberte espaço.', 'info');
-    return false;
-  }
-}
-
-function updateLastImportDisplay(s){
-  $('header-last-import').textContent=s;
-  if($('header-last-import-mobile')) $('header-last-import-mobile').textContent=s;
-}
-
-function showToast(message, type='success'){
-  const el=document.createElement('div');
-  el.className=`pointer-events-auto rounded-xl shadow-xl px-4 py-3 text-white text-xs font-bold ${type==='success'?'bg-emerald-600':type==='info'?'bg-sky-600':'bg-rose-600'}`;
-  el.textContent=message;
-  const container=$('toast-container');
-  container.appendChild(el);
-  setTimeout(()=>el.remove(), 2600);
-}
-
-function parseHubReceivedTime(value){
-  const s=String(value||'').trim();
-  if(!s) return null;
-  const m=s.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
-  if(!m) return null;
-  const [,dd,mm,yyyy,hh,mi,ss='0']=m;
-  const d=Number(dd), mo=Number(mm), y=Number(yyyy), h=Number(hh), min=Number(mi), sec=Number(ss);
-  if(mo<1 || mo>12 || d<1 || h>23 || min>59 || sec>59) return null;
-  const date=new Date(y, mo-1, d, h, min, sec);
-  return date.getFullYear()===y && date.getMonth()===mo-1 && date.getDate()===d ? date : null;
-}
-
-function calculateDaysInHub(value){
-  const received=parseHubReceivedTime(value);
-  if(!received) return null;
-  const elapsed=Date.now()-received.getTime();
-  return elapsed<0 ? null : Math.floor(elapsed / 86400000);
-}
-
-function getStatusBadgeClass(status){
-  const s=(status||'').trim();
-  if(s.includes('Hub_')) return 'status-hub';
-  if(s.includes('OnHold') || s.includes('Reject') || s.includes('On Hold')) return 'status-hold';
-  if(s.includes('Deliver') || s.includes('Delivering')) return 'status-delivering';
-  if(s.includes('SOC_')) return 'status-soc';
-  return 'status-default';
-}
-
-function switchTab(name){
-  ['dashboard','comparator','history'].forEach(t=>{
-    $(`view-${t}`).classList.toggle('hidden', t!==name);
-    $(`tab-${t}`).classList.toggle('tab-active', t===name);
-  });
-  if(name==='history') renderHistory();
-}
-
-function updateKPIs(){
-  const list = stckOrders;
-  $('kpi-total').textContent=list.length;
-  $('kpi-risk-critical').textContent=list.filter(o=>{
-    const d=calculateDaysInHub(o.receivedTime);
-    return (o.status==='Hub_Received' || o.status==='Hub_Assigned') && d!==null && d>=12 && d<=15;
-  }).length;
-  $('kpi-pending-ativo').textContent=list.filter(o=>o.ativoStatus !== 'Solucionado').length;
-  $('kpi-resolved').textContent=list.filter(o=>o.ativoStatus === 'Solucionado').length;
-}
-
-function applyFilters(){
-  const query=$('search-input').value.trim().toLowerCase();
-  const hub=$('filter-hub-status').value;
-  const ativo=$('filter-ativo-status').value;
-  const risk=$('filter-risk').value;
-
-  const filtered = stckOrders.filter(o => {
-    if(hub !== 'ALL' && o.status !== hub) return false;
-    if(ativo && o.ativoStatus !== ativo) return false;
-    if(query && !`${o.orderSn} ${o.trackingNo} ${o.buyerName} ${o.station} ${o.returnDest}`.toLowerCase().includes(query)) return false;
-
-    const d=calculateDaysInHub(o.receivedTime);
-    if(risk==='DATA_INVALIDA' && d!==null) return false;
-    if(risk==='CRITICO' && (d===null || d<12 || d>15)) return false;
-    if(risk==='ALERTA' && (d===null || d<8 || d>11)) return false;
-    if(risk==='SEGURO' && (d===null || d>7)) return false;
-    if(risk==='LOST' && (d===null || d<=15)) return false;
-
-    return true;
-  }).sort((a,b)=>(calculateDaysInHub(b.receivedTime) ?? -1) - (calculateDaysInHub(a.receivedTime) ?? -1));
-
-  $('filtered-count-badge').textContent = `${filtered.length} encomendas`;
-  renderTable(filtered);
-  $('select-all').checked=false;
-}
-
-function resetFilters(){
-  $('search-input').value='';
-  $('filter-hub-status').value='ALL';
-  $('filter-ativo-status').value='';
-  $('filter-risk').value='';
-  applyFilters();
-}
-
-function makeCell(tr, text){
-  const td=document.createElement('td');
-  td.className='p-3';
-  td.textContent=text;
-  tr.append(td);
-  return td;
-}
-
-function renderTable(rows){
-  const body=$('stuck-table-body');
-  body.replaceChildren();
-  $('table-empty').classList.toggle('hidden', rows.length>0);
-
-  for(const o of rows){
-    const tr=document.createElement('tr');
-    tr.className='hover:bg-slate-50';
-
-    const select=makeCell(tr,'');
-    const cb=document.createElement('input');
-    cb.type='checkbox';
-    cb.className='row-checkbox';
-    cb.value=o.orderSn;
-    select.append(cb);
-
-    const ids=makeCell(tr,'');
-    const id=document.createElement('strong');
-    id.className='font-mono';
-    id.textContent=o.orderSn;
-    const tracking=document.createElement('div');
-    tracking.className='text-slate-400';
-    tracking.textContent=o.trackingNo || 'N/A';
-    ids.append(id, tracking);
-
-    const buyer=makeCell(tr, o.buyerName || 'Não informado');
-    const phone=document.createElement('div');
-    phone.className='text-slate-400';
-    phone.textContent=o.buyerPhone || 'Sem telefone';
-    buyer.append(phone);
-
-    const stationCell=makeCell(tr, `${o.station || 'Estação'} / ${o.returnDest || 'SOC'}`);
-    stationCell.title=`${o.station || 'Estação'} / ${o.returnDest || 'SOC'}`;
-
-    const days=calculateDaysInHub(o.receivedTime);
-    const risk = days===null ? 'DATA INVÁLIDA/FUTURA' : days>15 ? 'LOST' : days>=12 ? 'CRÍTICO' : days>=8 ? 'ALERTA' : 'SEGURO';
-    const daysCell=makeCell(tr, `${o.receivedTime || 'Data ausente'} — ${days===null ? '' : `${days} dia(s) • `}${risk}`);
-
-    const statusBadge=document.createElement('span');
-    statusBadge.className=`status-pill ${getStatusBadgeClass(o.status)}`;
-    statusBadge.textContent=o.status || 'Hub_Received';
-    const statusCell=makeCell(tr,'');
-    statusCell.append(statusBadge);
-
-    const activoCell=makeCell(tr, o.ativoStatus || 'Pendente');
-
-    const action=makeCell(tr,'');
-    const b=document.createElement('button');
-    b.className='px-3 py-1.5 rounded-lg bg-shopee text-white font-bold';
-    b.textContent='Fazer ativo';
-    b.onclick=()=>openAtivoModal(o.orderSn);
-    action.append(b);
-
-    body.append(tr);
-  }
-}
-
-function toggleSelectAll(master){
-  document.querySelectorAll('.row-checkbox').forEach(cb=>{
-    cb.checked = master.checked;
-  });
-}
-
-function bulkMarkStatus(status){
-  const ids=new Set([...document.querySelectorAll('.row-checkbox:checked')].map(cb=>cb.value));
-  if(!ids.size){
-    showToast('Selecione ao menos uma encomenda.','info');
-    return;
-  }
-
-  stckOrders.forEach(order=>{
-    if(ids.has(order.orderSn)) {
-      order.ativoStatus = status;
-      order.history = order.history || [];
-      order.history.push({
-        date: new Date().toLocaleDateString('pt-BR'),
-        note: `Status alterado para ${status} em lote`
-      });
-    }
-  });
-
-  saveData();
-  applyFilters();
-  showToast(`Selecionadas marcadas como ${status}.`);
-}
-
-function parseCSVRows(text){
+function parseCSV(text){
   text=String(text).replace(/^\uFEFF/,'');
-  const first=text.split(/\r?\n/,1)[0]||'';
-  const delimiter=[',',';','\t'].map(c=>({c,n:first.split(c).length-1})).sort((a,b)=>b.n-a.n)[0];
-  if(!delimiter || delimiter.n<1) throw new Error('CSV inválido ou sem separador reconhecível.');
-  const rows=[];
-  let current=[]; let inQuotes=false; let quoteBuffer='';
-
+  const rows=[]; let row=[]; let field=''; let quoted=false;
   for(let i=0;i<text.length;i++){
     const ch=text[i];
     if(ch==='"'){
-      if(inQuotes && text[i+1]==='"') { quoteBuffer+='"'; i++; }
-      else { inQuotes=!inQuotes; }
-    } else if(ch==='\n' && !inQuotes) {
-      current.push(quoteBuffer); rows.push(current); current=[]; quoteBuffer='';
-    } else if(ch==='\r' && !inQuotes) {
-      continue;
-    } else if(ch===delimiter.c && !inQuotes) {
-      current.push(quoteBuffer); quoteBuffer='';
-    } else {
-      quoteBuffer+=ch;
-    }
+      if(quoted && text[i+1]==='"'){field+='"';i++;}
+      else quoted=!quoted;
+    }else if(ch===',' && !quoted){row.push(field);field='';}
+    else if((ch==='\n'||ch==='\r') && !quoted){
+      if(ch==='\r'&&text[i+1]==='\n')i++;
+      row.push(field);field='';
+      if(row.some(cell=>cell.trim()!==''))rows.push(row);
+      row=[];
+    }else field+=ch;
   }
-
-  if(quoteBuffer.length || current.length || text.trim().length) {
-    current.push(quoteBuffer);
-    rows.push(current);
-  }
-
-  return rows.filter(row=>row.some(cell=>String(cell).trim()!==''));
+  if(field!==''||row.length){row.push(field);if(row.some(cell=>cell.trim()!==''))rows.push(row);}
+  if(!rows.length)throw new Error('O CSV está vazio.');
+  const headers=rows[0].map(h=>h.trim());
+  const missing=REQUIRED_HEADERS.filter(h=>!headers.includes(h));
+  if(missing.length)throw new Error(`Cabeçalho inesperado. Colunas não encontradas: ${missing.join(', ')}.`);
+  const col=Object.fromEntries(REQUIRED_HEADERS.map(h=>[h,headers.indexOf(h)]));
+  return rows.slice(1).map(cells=>Object.fromEntries(REQUIRED_HEADERS.map(h=>[h,String(cells[col[h]]??'').trim()]))).filter(o=>o['Order ID']);
 }
 
-function headerKey(v){
-  return String(v||'').replace(/^\uFEFF/,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/[^a-z0-9]/g,'');
+function parseReceivedDate(value){
+  const m=String(value||'').trim().match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if(!m)return null;
+  const [,dd,mm,yyyy,hh,mi,ss='0']=m;
+  const day=Number(dd),month=Number(mm),year=Number(yyyy),hour=Number(hh),minute=Number(mi),second=Number(ss);
+  if(month<1||month>12||day<1||hour>23||minute>59||second>59)return null;
+  const date=new Date(year,month-1,day,hour,minute,second);
+  return date.getFullYear()===year&&date.getMonth()===month-1&&date.getDate()===day?date:null;
 }
 
-function normalizeStatus(raw){
-  const value=String(raw||'').trim();
-  if(!value) return 'Hub_Received';
-  return value;
+function dayAge(value){
+  const received=parseReceivedDate(value);
+  if(!received)return null;
+  const today=new Date();
+  const start=Date.UTC(received.getFullYear(),received.getMonth(),received.getDate());
+  const end=Date.UTC(today.getFullYear(),today.getMonth(),today.getDate());
+  const days=Math.floor((end-start)/86400000);
+  return days<0?null:days;
 }
 
-function parseCSV(text){
-  let rows;
-  try { rows=parseCSVRows(text); }
-  catch(e){ showToast(e.message,'info'); return false; }
-
-  if(rows.length < 2){ showToast('CSV inválido ou sem linhas de dados.','info'); return false; }
-
-  const header=rows[0].map(h=>String(h||'').trim());
-  const col={
-    order: header.findIndex((h)=>headerKey(h).includes('orderid') || headerKey(h).includes('order') && headerKey(h).includes('id')),
-    tracking: header.findIndex((h)=>headerKey(h).includes('tracking') || headerKey(h).includes('sls')), 
-    buyer: header.findIndex((h)=>headerKey(h).includes('buyer') || headerKey(h).includes('comprador')),
-    phone: header.findIndex((h)=>headerKey(h).includes('phone') || headerKey(h).includes('telefone')),
-    received: header.findIndex((h)=>headerKey(h).includes('received') || headerKey(h).includes('chegada') || headerKey(h).includes('receivedtime')),
-    status: header.findIndex((h)=>headerKey(h).includes('status')),
-    station: header.findIndex((h)=>headerKey(h).includes('station') || headerKey(h).includes('currentstation')),
-    dest: header.findIndex((h)=>headerKey(h).includes('return') || headerKey(h).includes('destination') || headerKey(h).includes('returndestination'))
-  };
-
-  if(col.order === -1){ showToast('CSV sem coluna de Order ID. Verifique o relatório exportado.', 'info'); return false; }
-
-  const parsedRows = new Map();
-  for(const row of rows.slice(1)){
-    const get=i=> i<0 ? '' : String(row[i] ?? '').trim();
-    const id=get(col.order);
-    if(!id) continue;
-
-    const incomingStatus=normalizeStatus(get(col.status));
-    parsedRows.set(id.toUpperCase(), {
-      orderSn:id,
-      trackingNo:get(col.tracking),
-      buyerName:get(col.buyer),
-      buyerPhone:get(col.phone),
-      receivedTime:get(col.received),
-      status:incomingStatus,
-      station:get(col.station),
-      returnDest:get(col.dest)
-    });
-  }
-
-  if(!parsedRows.size){ showToast('Nenhum pedido válido encontrado.','info'); return false; }
-
-  let newStuckCount=0;
-  const now=new Date();
-  const importDateKey=localDateKey(now);
-
-  for(const incoming of parsedRows.values()){
-    const old=stckOrders.find(o=>o.orderSn.toUpperCase()===incoming.orderSn.toUpperCase());
-    const incomingStatus=incoming.status || 'Hub_Received';
-
-    if(!old){
-      newStuckCount++;
-      stckOrders.unshift({
-        ...incoming,
-        status:incomingStatus,
-        ativoStatus:'Pendente',
-        history:[]
-      });
-    } else {
-      old.trackingNo=incoming.trackingNo || old.trackingNo;
-      old.buyerName=incoming.buyerName || old.buyerName;
-      old.buyerPhone=incoming.buyerPhone || old.buyerPhone;
-      old.receivedTime=incoming.receivedTime || old.receivedTime;
-      old.station=incoming.station || old.station;
-      old.returnDest=incoming.returnDest || old.returnDest;
-      old.status=incomingStatus;
-    }
-  }
-
-  if(!saveData()) return false;
-
-  const stamp=now.toLocaleString('pt-BR');
-  try { localStorage.setItem(IMPORT_KEY, stamp); } catch(e) { console.warn(e); }
-  updateLastImportDisplay(stamp);
-
-  const total=stckOrders.length;
-  const today = historyData.imports.find(x=>x.dateKey===importDateKey) || null;
-  if(today){
-    today.importedRows = total;
-    today.newStuck = Number(today.newStuck || 0) + newStuckCount;
-    today.totalStuck = total;
-    today.lastImportedAt = stamp;
-  } else {
-    historyData.imports.push({
-      dateKey: importDateKey,
-      importedRows: total,
-      newStuck: newStuckCount,
-      totalStuck: total,
-      lastImportedAt: stamp,
-      importsCount: 1,
-      weekKey: weekKey(now),
-      weekLabel: weekRangeLabel(now),
-      monthKey: importDateKey.slice(0,7),
-      monthLabel: now.toLocaleDateString('pt-BR', { month:'long', year:'numeric' })
-    });
-  }
-
-  historyData.imports.sort((a,b)=>a.dateKey.localeCompare(b.dateKey));
-  historyData.imports = historyData.imports.slice(-400);
-  saveHistoryData();
-  renderHistory();
-
-  applyFilters();
-  showToast(`Importação concluída: ${newStuckCount} nova(s) encomenda(s) STUCK.`);
-  return true;
+function classification(order,days){
+  if(order.Status!=='Hub_Received'&&order.Status!=='Hub_Assigned')return {label:'—',css:'bg-slate-100 text-slate-600'};
+  if(days===null)return {label:'Data inválida/futura',css:'bg-slate-100 text-slate-700'};
+  if(days>15)return {label:'LOST (>15 dias)',css:'bg-red-100 text-red-800'};
+  if(days>=12)return {label:'Crítico (12–15)',css:'bg-rose-100 text-rose-800'};
+  if(days>=8)return {label:'Alerta (8–11)',css:'bg-amber-100 text-amber-800'};
+  return {label:'Seguro (0–7)',css:'bg-emerald-100 text-emerald-800'};
 }
 
-function handleCSVUpload(event){
-  const file=event.target.files?.[0];
-  event.target.value='';
-  if(!file) return;
-  if(!/\.csv$/i.test(file.name)){ showToast('Selecione um arquivo CSV.','info'); return; }
+function showMessage(text,error=false){
+  const el=$('message');el.textContent=text;el.className=`rounded-lg border p-3 text-sm ${error?'border-rose-200 bg-rose-50 text-rose-800':'border-emerald-200 bg-emerald-50 text-emerald-800'}`;
+}
+function addCell(tr,text){const td=document.createElement('td');td.className='p-3';td.textContent=text||'—';tr.append(td);return td;}
+function render(){
+  const body=$('rows');body.replaceChildren();
+  const query=$('search').value.trim().toLocaleLowerCase('pt-BR');
+  const status=$('status-filter').value;
+  const filtered=orders.filter(o=>(!status||o.Status===status)&&(!query||[o['Order ID'],o['SLS Tracking Number'],o['Current Station']].join(' ').toLocaleLowerCase('pt-BR').includes(query)));
+  const critical=orders.filter(order=>{
+    const days=dayAge(order['Received Time']);
+    return (order.Status==='Hub_Received'||order.Status==='Hub_Assigned')&&days!==null&&days>=12&&days<=15;
+  }).length;
+  $('total-count').textContent=String(orders.length);$('critical-count').textContent=String(critical);
+  for(const order of filtered){
+    const tr=document.createElement('tr');tr.className='hover:bg-slate-50';
+    addCell(tr,order['Order ID']);addCell(tr,order['SLS Tracking Number']);addCell(tr,order['Buyer Name']);addCell(tr,order['Current Station']);addCell(tr,order['Return Destination']);
+    const days=dayAge(order['Received Time']);
+    addCell(tr,order['Received Time']?`${order['Received Time']}${days===null?'':` · ${days} dia(s)`}`:'—');
+    addCell(tr,order.Status);
+    const result=classification(order,days);const badge=document.createElement('span');badge.className=`pill ${result.css}`;badge.textContent=result.label;const riskCell=document.createElement('td');riskCell.className='p-3';riskCell.append(badge);tr.append(riskCell);body.append(tr);
+  }
+  $('empty').classList.toggle('hidden',filtered.length>0);
+  $('empty').textContent=orders.length?(filtered.length?'':'Nenhum pedido corresponde aos filtros.'):'Importe o CSV para visualizar os pedidos.';
+  $('shown-count').textContent=orders.length?`Exibindo ${filtered.length} de ${orders.length} linha(s) importada(s).`:'';
+  $('export-button').disabled=!orders.length;
+}
 
+$('import-button').addEventListener('click',()=>$('csv-file').click());
+$('csv-file').addEventListener('change',event=>{
+  const file=event.target.files?.[0];event.target.value='';if(!file)return;
   const reader=new FileReader();
-  reader.onload=()=>{
-    if(typeof reader.result === 'string') parseCSV(reader.result);
-  };
-  reader.onerror=()=>showToast('Não foi possível ler o ficheiro.','info');
-  reader.readAsText(file);
-}
-
-function csvField(value){
-  let s=String(value ?? '');
-  if(/^[\s]*[=+@]/.test(s)) s="'" + s;
-  return `"${s.replace(/"/g,'""')}"`;
-}
-
-function exportCleanedCSV(){
-  if(!stckOrders.length){ showToast('Nenhum dado para exportar.','info'); return; }
-
-  const rows=[
-    ['Order ID','SLS Tracking Number','Buyer Name','Buyer Phone','Current Station','Return Destination','Status','Status Ativo','Received Time'],
-    ...stckOrders.map(o=>[
-      o.orderSn,
-      o.trackingNo,
-      o.buyerName,
-      o.buyerPhone,
-      o.station,
-      o.returnDest,
-      o.status,
-      o.ativoStatus,
-      o.receivedTime
-    ])
-  ];
-
-  const content = rows.map(r=>r.map(csvField).join(',')).join('\n');
-  const blob = new Blob([content], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download='stuck_export_clean.csv'; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
-}
-
-function compareOrderIDs(){
-  const ids=[...new Set($('comparator-input').value.split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(Boolean))];
-  if(!ids.length){ showToast('Cole ao menos um Order ID.','info'); return; }
-
-  lastComparisonDone=[];
-  lastComparisonPending=[];
-  const map=new Map();
-  stckOrders.forEach(o=>{
-    map.set(o.orderSn.toUpperCase(), o);
-    if(o.trackingNo) map.set(o.trackingNo.toUpperCase(), o);
-  });
-
-  ids.forEach(id=>{
-    const order=map.get(id);
-    if(order?.ativoStatus==='Solucionado') lastComparisonDone.push({inputID:id, order});
-    else lastComparisonPending.push({inputID:id, order:order || null, foundInSystem:!!order});
-  });
-
-  $('comp-total-count').textContent=ids.length;
-  $('comp-done-count').textContent=lastComparisonDone.length;
-  $('comp-pending-count').textContent=lastComparisonPending.length;
-  $('done-header-count').textContent=lastComparisonDone.length;
-  $('pending-header-count').textContent=lastComparisonPending.length;
-  renderComparatorLists();
-  $('comparator-summary').classList.remove('hidden');
-  $('comparator-results').classList.remove('hidden');
-}
-
-function renderComparatorLists(){
-  const groups=[
-    ['done', lastComparisonDone, $('comp-list-done')],
-    ['pending', lastComparisonPending, $('comp-list-pending')]
-  ];
-
-  groups.forEach(([type, items, container])=>{
-    container.replaceChildren();
-    if(!items.length){
-      const li=document.createElement('li');
-      li.className='p-3 text-slate-500';
-      li.textContent = type==='done' ? 'Nenhum tratado.' : 'Nenhum pendente.';
-      container.append(li);
-      return;
-    }
-
-    items.forEach(item=>{
-      const li=document.createElement('li');
-      li.className='p-3 border-b last:border-0';
-      const strong=document.createElement('strong');
-      strong.textContent=item.inputID;
-      li.append(strong);
-      if(item.order){
-        const meta=document.createElement('div');
-        meta.className='text-slate-500 mt-1';
-        meta.textContent=`Status: ${item.order.ativoStatus || 'Pendente'} • ${item.order.status || 'Hub_Received'}`;
-        li.append(meta);
-      } else {
-        const meta=document.createElement('div');
-        meta.className='text-red-600 mt-1';
-        meta.textContent='Não encontrado no sistema';
-        li.append(meta);
-      }
-      container.append(li);
-    });
-  });
-}
-
-function clearComparator(){
-  $('comparator-input').value='';
-  $('comparator-summary').classList.add('hidden');
-  $('comparator-results').classList.add('hidden');
-  lastComparisonDone=[];
-  lastComparisonPending=[];
-  $('comp-list-done').replaceChildren();
-  $('comp-list-pending').replaceChildren();
-}
-
-async function copyList(type){
-  const list=(type==='done'?lastComparisonDone:lastComparisonPending).map(i=>i.inputID);
-  if(!list.length){ showToast('Lista vazia.','info'); return; }
-
-  try {
-    await navigator.clipboard.writeText(list.join('\n'));
-    showToast('Lista copiada.');
-  } catch (e) {
-    showToast('Não foi possível copiar.','info');
-  }
-}
-
-function openAtivoModal(id){
-  const o=stckOrders.find(x=>x.orderSn===id);
-  if(!o) return;
-
-  currentModalOrderSn=id;
-  $('m-order-sn').textContent=id;
-  $('m-tracking').textContent=o.trackingNo || 'N/A';
-  const d=calculateDaysInHub(o.receivedTime);
-  $('m-days-stuck').textContent=d===null ? `${o.receivedTime || 'Data indisponível'} — inválida/futura` : `${o.receivedTime} — ${d} dia(s)`;
-  $('m-buyer-name').textContent=o.buyerName || 'Cliente';
-  $('m-hub-station').textContent=o.station || 'Hub';
-  $('m-return-dest').textContent=o.returnDest || 'SOC';
-  $('m-buyer-phone-input').value=o.buyerPhone || '';
-  $('m-new-status').value=o.ativoStatus || 'Pendente';
-  $('m-new-note').value='';
-  $('m-message-text').value='';
-  applyTemplate('retirada');
-
-  const log=$('m-history-log');
-  log.replaceChildren();
-  if(o.history?.length){
-    o.history.forEach(h=>{
-      const p=document.createElement('p');
-      p.textContent=`[${h.date || 'Data'}] ${h.note || ''}`;
-      log.append(p);
-    });
-  } else {
-    log.textContent='Nenhuma tratativa registrada.';
-  }
-
-  $('modal-ativo').classList.remove('hidden');
-  $('modal-ativo').classList.add('flex');
-}
-
-function closeAtivoModal(){
-  $('modal-ativo').classList.add('hidden');
-  $('modal-ativo').classList.remove('flex');
-  currentModalOrderSn=null;
-}
-
-function applyTemplate(type){
-  const o=stckOrders.find(x=>x.orderSn===currentModalOrderSn);
-  if(!o) return;
-
-  const name=o.buyerName || 'Cliente';
-  const baseMessage={
-    retirada:`Olá ${name}! Seu pedido ${o.orderSn} está em análise no sistema STUCK. Precisamos confirmar a retirada/encaminhamento do pacote. Favor responder e informar o melhor horário para coleta ou devolução.`,
-    contato:`Olá ${name}! Estamos acompanhando o pedido ${o.orderSn}. Como o status ainda está pendente, precisamos confirmar se o endereço/entrega está correto para continuar o processo.`,
-    default:`Olá ${name}! Estamos acompanhando seu pedido ${o.orderSn}. Precisamos de uma confirmação para dar continuidade ao processo.`
-  };
-
-  $('m-message-text').value = baseMessage[type] || baseMessage.default;
-}
-
-async function copyMessageText(){
-  try {
-    await navigator.clipboard.writeText($('m-message-text').value);
-    showToast('Mensagem copiada.');
-  } catch (e) {
-    showToast('Não foi possível copiar.','info');
-  }
-}
-
-function triggerWhatsAppDirect(){
-  let phone=$('m-buyer-phone-input').value.replace(/\D/g,'');
-  if(phone.startsWith('55')) phone=phone.slice(2);
-  if(phone.length<10 || phone.length>11){ showToast('Informe um telefone válido do cliente.','info'); return; }
-
-  const msg=encodeURIComponent($('m-message-text').value || '');
-  const wa=`https://wa.me/55${phone}?text=${msg}`;
-  window.open(wa, '_blank');
-}
-
-function saveAtivoTratativa(){
-  const o=stckOrders.find(x=>x.orderSn===currentModalOrderSn);
-  if(!o){
-    showToast('Pedido não encontrado.','info');
-    closeAtivoModal();
-    return;
-  }
-
-  const status=$('m-new-status').value;
-  const note=$('m-new-note').value.trim();
-  o.ativoStatus=status;
-  o.history = Array.isArray(o.history) ? o.history : [];
-  if(note || status){
-    o.history.push({ date:new Date().toLocaleDateString('pt-BR'), note: note || `Status atualizado para ${status}` });
-  }
-
-  saveData();
-  applyFilters();
-  closeAtivoModal();
-  showToast(`Tratativa salva para ${o.orderSn}.`);
-}
-
-function localDateKey(date){
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-}
-
-function weekKey(date){
-  const d=new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const day=d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate()+4-day);
-  const yearStart=new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo=Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2,'0')}`;
-}
-
-function weekRangeLabel(date){
-  const start=new Date(date);
-  const weekday=(start.getDay()+6)%7;
-  start.setDate(start.getDate()-weekday);
-  const end=new Date(start);
-  end.setDate(start.getDate()+6);
-  const fmt=(d)=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-  return `${fmt(start)} - ${fmt(end)}`;
-}
-
-function renderHistory(){
-  const summary=$('history-summary');
-  if(!summary) return;
-  const imports=Array.isArray(historyData.imports)?historyData.imports:[];
-  const currentMonth=localDateKey(new Date());
-  const monthItems=imports.filter(item=>item.dateKey.startsWith(currentMonth.slice(0,7))).slice(-30);
-
-  summary.replaceChildren();
-  if(!monthItems.length){
-    const empty=document.createElement('div');
-    empty.className='rounded-xl border bg-slate-50 p-3 text-xs text-slate-500';
-    empty.textContent='Ainda não há dados deste mês.';
-    summary.append(empty);
-  } else {
-    const total = monthItems.reduce((acc,item)=>acc + Number(item.totalStuck || item.importedRows || 0),0);
-    const newOrders = monthItems.reduce((acc,item)=>acc + Number(item.newStuck || 0),0);
-    const latest = monthItems[monthItems.length-1];
-
-    const cards=[
-      ['Total do mês', total],
-      ['Novos STUCK', newOrders],
-      ['Último snapshot', latest ? latest.totalStuck || latest.importedRows || 0 : 0],
-      ['Última importação', latest ? latest.lastImportedAt || '—' : '—']
-    ];
-
-    cards.forEach(([label, value])=>{
-      const card=document.createElement('div');
-      card.className='rounded-xl border bg-slate-50 p-3';
-      card.innerHTML=`<p class="text-[11px] font-semibold uppercase text-slate-500">${label}</p><strong class="text-xl">${value}</strong>`;
-      summary.append(card);
-    });
-  }
-
-  const weeks=new Map();
-  monthItems.forEach(item=>{
-    const key=item.weekKey || weekKey(new Date(`${item.dateKey}T12:00:00`));
-    if(!weeks.has(key)) weeks.set(key,{key,label:item.weekLabel||key,newStuck:0,lastTotal:0,imports:0});
-    const week=weeks.get(key);
-    week.newStuck += Number(item.newStuck || 0);
-    week.imports += Number(item.importsCount || 1);
-    week.lastTotal = Number(item.totalStuck || item.importedRows || 0);
-  });
-
-  const list=[...weeks.values()].sort((a,b)=>a.key.localeCompare(b.key));
-  const max=Math.max(1,...list.map(x=>x.newStuck));
-  const grid=$('history-weekly-grid');
-  grid.replaceChildren();
-
-  if(!list.length){
-    const empty=document.createElement('p');
-    empty.className='text-xs text-slate-500';
-    empty.textContent='Ainda não há importações registradas no mês atual.';
-    grid.append(empty);
-  } else {
-    list.forEach(week=>{
-      const card=document.createElement('div');
-      card.className='rounded-xl border bg-slate-50 p-3';
-      const top=document.createElement('div');
-      top.className='flex justify-between gap-2 text-xs font-semibold mb-2';
-      const label=document.createElement('span');
-      label.textContent=`Semana ${week.key.split('-W')[1]} • ${week.label}`;
-      const qty=document.createElement('span');
-      qty.textContent=`${week.newStuck} novo(s)`;
-      top.append(label, qty);
-
-      const track=document.createElement('div');
-      track.className='w-full h-2 bg-slate-200 rounded-full overflow-hidden';
-      const bar=document.createElement('div');
-      bar.className='h-full bg-shopee rounded-full';
-      bar.style.width=`${week.newStuck===0?0:Math.max(3, week.newStuck/max*100)}%`;
-      track.append(bar);
-
-      const detail=document.createElement('div');
-      detail.className='mt-2 text-[11px] text-slate-500';
-      detail.textContent=`${week.lastTotal} pedido(s) em STUCK no último snapshot • ${week.imports} importação(ões)`;
-      card.append(top, track, detail);
-      grid.append(card);
-    });
-  }
-
-  const tbody=$('history-table-body');
-  tbody.replaceChildren();
-  if(!imports.length){
-    const tr=document.createElement('tr');
-    const td=document.createElement('td');
-    td.colSpan=5; td.className='p-3 text-slate-500'; td.textContent='Nenhuma importação registrada.';
-    tr.append(td); tbody.append(tr); return;
-  }
-
-  imports.forEach(item=>{
-    const tr=document.createElement('tr');
-    tr.className='border-t';
-    const cells=[
-      item.dateKey,
-      item.importedRows || 0,
-      item.newStuck || 0,
-      item.totalStuck || item.importedRows || 0,
-      item.lastImportedAt || '—'
-    ];
-    cells.forEach(value=>{
-      const td=document.createElement('td');
-      td.className='p-2'; td.textContent=value;
-      tr.append(td);
-    });
-    tbody.append(tr);
-  });
-}
-
-function downloadBlob(content, name, type){
-  const url=URL.createObjectURL(new Blob([content], { type }));
-  const a=document.createElement('a');
-  a.href=url; a.download=name; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
-}
-
-function exportHistoryBackup(){
-  const backup={ format:'STUCK_HISTORY_BACKUP_V1', exportedAt:new Date().toISOString(), history:historyData };
-  downloadBlob(JSON.stringify(backup,null,2), `stuck_historico_${localDateKey(new Date())}.json`, 'application/json');
-}
-
-function importHistoryBackup(event){
-  const file=event.target.files?.[0];
-  event.target.value='';
-  if(!file) return;
-
-  const reader=new FileReader();
-  reader.onload=()=>{
-    try {
-      const payload=JSON.parse(String(reader.result));
-      if(payload && Array.isArray(payload.history?.imports)){ historyData=payload.history; saveHistoryData(); renderHistory(); showToast('Backup importado.'); }
-      else { showToast('Arquivo de backup inválido.','info'); }
-    } catch (e) {
-      showToast('Não foi possível importar o backup.','info');
-    }
-  };
-  reader.onerror=()=>showToast('Não foi possível ler o backup.','info');
-  reader.readAsText(file);
-}
+  reader.onload=()=>{try{const parsed=parseCSV(reader.result);orders=parsed;$('file-name').textContent=file.name;const statuses=[...new Set(orders.map(o=>o.Status).filter(Boolean))].sort();const select=$('status-filter');select.replaceChildren(new Option('Todos os status',''));statuses.forEach(s=>select.add(new Option(s,s)));render();showMessage(`${orders.length} pedido(s) lido(s) do CSV. Os campos são exibidos conforme vieram na planilha.`);}catch(error){orders=[];$('file-name').textContent='Nenhum CSV importado';render();showMessage(error.message,true);}};
+  reader.onerror=()=>showMessage('Não foi possível ler o arquivo CSV.',true);
+  reader.readAsText(file,'UTF-8');
+});
+$('search').addEventListener('input',render);$('status-filter').addEventListener('change',render);
+$('export-button').addEventListener('click',()=>{
+  const headers=['Order ID','SLS Tracking Number','Buyer Name','Received Time','Status','Current Station','Return Destination'];
+  const quote=value=>'"'+String(value??'').replace(/"/g,'""')+'"';
+  const csv=[headers,...orders.map(o=>headers.map(h=>o[h]))].map(row=>row.map(quote).join(',')).join('\r\n');
+  const link=document.createElement('a');const url=URL.createObjectURL(new Blob(['\uFEFF',csv],{type:'text/csv;charset=utf-8'}));link.href=url;link.download='stuck_export.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+render();
 </script>
 </body>
 </html>
