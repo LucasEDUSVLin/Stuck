@@ -1,68 +1,164 @@
-function parseHubReceivedTime(value){
-  const s=String(value||'').trim();
-  if(!s) return null;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STUCK — Gestão de encomendas</title>
+  <meta name="theme-color" content="#0F172A">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .pill{display:inline-flex;border-radius:9999px;padding:.2rem .55rem;font-size:.7rem;font-weight:700;white-space:nowrap}
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800">
+  <header class="sticky top-0 z-10 border-b-2 border-orange-500 bg-slate-900 text-white shadow">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div class="flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-lg font-black tracking-wide">
+        <svg aria-hidden="true" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 8-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22v-10"/></svg>
+        STUCK
+      </div>
+      <div class="flex gap-2">
+        <input id="csv-file" class="hidden" type="file" accept=".csv,text/csv">
+        <button id="import-button" class="flex items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-bold hover:bg-orange-700">
+          <svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m-4 4 4-4 4 4M4 20h16"/></svg>Importar CSV
+        </button>
+        <button id="export-button" class="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm font-bold hover:bg-slate-600" disabled>
+          <svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v12m-4-4 4 4 4-4M4 20h16"/></svg>Exportar CSV
+        </button>
+      </div>
+    </div>
+  </header>
+  <main class="mx-auto max-w-7xl space-y-4 px-4 py-6">
+    <section class="grid gap-3 sm:grid-cols-3">
+      <div class="rounded-xl border bg-white p-4"><p class="text-xs font-semibold uppercase text-slate-500">Linhas importadas</p><strong id="total-count" class="text-2xl">0</strong></div>
+      <div class="rounded-xl border bg-white p-4"><p class="text-xs font-semibold uppercase text-slate-500">Hub_Received / Hub_Assigned críticos</p><strong id="critical-count" class="text-2xl text-rose-600">0</strong></div>
+      <div class="rounded-xl border bg-white p-4"><p class="text-xs font-semibold uppercase text-slate-500">Arquivo</p><strong id="file-name" class="block truncate text-sm">Nenhum CSV importado</strong></div>
+    </section>
+    <p id="message" role="status" class="hidden rounded-lg border p-3 text-sm"></p>
+    <section class="rounded-xl border bg-white p-4">
+      <div class="flex flex-wrap gap-2">
+        <input id="search" type="search" placeholder="Buscar pedido, rastreio ou estação" class="min-w-52 flex-1 rounded-lg border bg-slate-50 p-2 text-sm">
+        <select id="status-filter" class="rounded-lg border bg-slate-50 p-2 text-sm"><option value="">Todos os status</option></select>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">A tabela usa os valores do CSV. Dias são contados por data local, sem depender do horário atual.</p>
+    </section>
+    <section class="overflow-hidden rounded-xl border bg-white">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-900 text-white"><tr>
+            <th class="p-3">Order ID</th><th class="p-3">Rastreio</th><th class="p-3">Comprador</th><th class="p-3">Estação</th><th class="p-3">Destino</th><th class="p-3">Received Time / dias</th><th class="p-3">Status</th><th class="p-3">Classificação</th>
+          </tr></thead>
+          <tbody id="rows" class="divide-y"></tbody>
+        </table>
+      </div>
+      <p id="empty" class="p-8 text-center text-sm text-slate-500">Importe o CSV para visualizar os pedidos.</p>
+      <p id="shown-count" class="border-t p-3 text-xs text-slate-500"></p>
+    </section>
+    <p class="text-xs text-slate-500">Os dados do arquivo ficam apenas nesta página enquanto ela estiver aberta; nada é enviado nem salvo no navegador.</p>
+  </main>
+<script>
+'use strict';
+const REQUIRED_HEADERS=['Order ID','SLS Tracking Number','Buyer Name','Received Time','Status','Current Station','Return Destination'];
+let orders=[];
+const $=id=>document.getElementById(id);
 
-  const patterns=[
-    /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/,
-    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/,
-    /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/,
-    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/
-  ];
-
-  for(const pattern of patterns){
-    const m=s.match(pattern);
-    if(!m) continue;
-
-    let dd, mo, yy, hh=0, min=0, sec=0;
-    if(pattern.source.includes('\\d{4}\\s+')){
-      if(m.length >= 6){
-        if(m[1].length === 4){
-          yy=Number(m[1]); mo=Number(m[2]); dd=Number(m[3]); hh=Number(m[4]); min=Number(m[5]); sec=Number(m[6] || '0');
-        } else {
-          dd=Number(m[1]); mo=Number(m[2]); yy=Number(m[3]); hh=Number(m[4]); min=Number(m[5]); sec=Number(m[6] || '0');
-        }
-      }
-    } else {
-      if(m.length >= 4){
-        if(m[3].length === 4){
-          dd=Number(m[1]); mo=Number(m[2]); yy=Number(m[3]);
-        } else {
-          yy=Number(m[1]); mo=Number(m[2]); dd=Number(m[3]);
-        }
-      }
-    }
-
-    if(mo<1 || mo>12 || dd<1 || hh>23 || min>59 || sec>59) continue;
-
-    const date=new Date(yy, mo-1, dd, hh, min, sec);
-    if(date.getFullYear()===yy && date.getMonth()===mo-1 && date.getDate()===dd){
-      return date;
-    }
+function parseCSV(text){
+  text=String(text).replace(/^\uFEFF/,'');
+  const rows=[]; let row=[]; let field=''; let quoted=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(ch==='"'){
+      if(quoted && text[i+1]==='"'){field+='"';i++;}
+      else quoted=!quoted;
+    }else if(ch===',' && !quoted){row.push(field);field='';}
+    else if((ch==='\n'||ch==='\r') && !quoted){
+      if(ch==='\r'&&text[i+1]==='\n')i++;
+      row.push(field);field='';
+      if(row.some(cell=>cell.trim()!==''))rows.push(row);
+      row=[];
+    }else field+=ch;
   }
-
-  return null;
+  if(field!==''||row.length){row.push(field);if(row.some(cell=>cell.trim()!==''))rows.push(row);}
+  if(!rows.length)throw new Error('O CSV está vazio.');
+  const headers=rows[0].map(h=>h.trim());
+  const missing=REQUIRED_HEADERS.filter(h=>!headers.includes(h));
+  if(missing.length)throw new Error(`Cabeçalho inesperado. Colunas não encontradas: ${missing.join(', ')}.`);
+  const col=Object.fromEntries(REQUIRED_HEADERS.map(h=>[h,headers.indexOf(h)]));
+  return rows.slice(1).map(cells=>Object.fromEntries(REQUIRED_HEADERS.map(h=>[h,String(cells[col[h]]??'').trim()]))).filter(o=>o['Order ID']);
 }
 
-function calculateDaysInHub(value){
-  const received=parseHubReceivedTime(value);
-  if(!received) return null;
+function parseReceivedDate(value){
+  const m=String(value||'').trim().match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if(!m)return null;
+  const [,dd,mm,yyyy,hh,mi,ss='0']=m;
+  const day=Number(dd),month=Number(mm),year=Number(yyyy),hour=Number(hh),minute=Number(mi),second=Number(ss);
+  if(month<1||month>12||day<1||hour>23||minute>59||second>59)return null;
+  const date=new Date(year,month-1,day,hour,minute,second);
+  return date.getFullYear()===year&&date.getMonth()===month-1&&date.getDate()===day?date:null;
+}
 
-  const start=new Date(received.getFullYear(), received.getMonth(), received.getDate());
+function dayAge(value){
+  const received=parseReceivedDate(value);
+  if(!received)return null;
   const today=new Date();
-  const todayStart=new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const elapsed=todayStart.getTime()-start.getTime();
-
-  return elapsed<0 ? null : Math.floor(elapsed / 86400000);
+  const start=Date.UTC(received.getFullYear(),received.getMonth(),received.getDate());
+  const end=Date.UTC(today.getFullYear(),today.getMonth(),today.getDate());
+  const days=Math.floor((end-start)/86400000);
+  return days<0?null:days;
 }
 
-function initializeIcons(){
-  if(window.lucide && typeof window.lucide.createIcons === 'function') {
-    window.lucide.createIcons();
+function classification(order,days){
+  if(order.Status!=='Hub_Received'&&order.Status!=='Hub_Assigned')return {label:'—',css:'bg-slate-100 text-slate-600'};
+  if(days===null)return {label:'Data inválida/futura',css:'bg-slate-100 text-slate-700'};
+  if(days>15)return {label:'LOST (>15 dias)',css:'bg-red-100 text-red-800'};
+  if(days>=12)return {label:'Crítico (12–15)',css:'bg-rose-100 text-rose-800'};
+  if(days>=8)return {label:'Alerta (8–11)',css:'bg-amber-100 text-amber-800'};
+  return {label:'Seguro (0–7)',css:'bg-emerald-100 text-emerald-800'};
+}
+
+function showMessage(text,error=false){
+  const el=$('message');el.textContent=text;el.className=`rounded-lg border p-3 text-sm ${error?'border-rose-200 bg-rose-50 text-rose-800':'border-emerald-200 bg-emerald-50 text-emerald-800'}`;
+}
+function addCell(tr,text){const td=document.createElement('td');td.className='p-3';td.textContent=text||'—';tr.append(td);return td;}
+function render(){
+  const body=$('rows');body.replaceChildren();
+  const query=$('search').value.trim().toLocaleLowerCase('pt-BR');
+  const status=$('status-filter').value;
+  const filtered=orders.filter(o=>(!status||o.Status===status)&&(!query||[o['Order ID'],o['SLS Tracking Number'],o['Current Station']].join(' ').toLocaleLowerCase('pt-BR').includes(query)));
+  let critical=0;
+  for(const order of orders){const days=dayAge(order['Received Time']);if((order.Status==='Hub_Received'||order.Status==='Hub_Assigned')&&days!==null&&days>=12)critical++;}
+  $('total-count').textContent=String(orders.length);$('critical-count').textContent=String(critical);
+  for(const order of filtered){
+    const tr=document.createElement('tr');tr.className='hover:bg-slate-50';
+    addCell(tr,order['Order ID']);addCell(tr,order['SLS Tracking Number']);addCell(tr,order['Buyer Name']);addCell(tr,order['Current Station']);addCell(tr,order['Return Destination']);
+    const days=dayAge(order['Received Time']);
+    addCell(tr,order['Received Time']?`${order['Received Time']}${days===null?'':` · ${days} dia(s)`}`:'—');
+    const statusCell=addCell(tr,order.Status);statusCell.className='p-3';
+    const result=classification(order,days);const badge=document.createElement('span');badge.className=`pill ${result.css}`;badge.textContent=result.label;const riskCell=document.createElement('td');riskCell.className='p-3';riskCell.append(badge);tr.append(riskCell);body.append(tr);
   }
+  $('empty').classList.toggle('hidden',filtered.length>0);
+  $('empty').textContent=orders.length?(filtered.length?'':'Nenhum pedido corresponde aos filtros.'):'Importe o CSV para visualizar os pedidos.';
+  $('shown-count').textContent=orders.length?`Exibindo ${filtered.length} de ${orders.length} linha(s) importada(s).`:'';
+  $('export-button').disabled=!orders.length;
 }
 
-if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', initializeIcons);
-} else {
-  initializeIcons();
-}
+$('import-button').addEventListener('click',()=>$('csv-file').click());
+$('csv-file').addEventListener('change',event=>{
+  const file=event.target.files?.[0];event.target.value='';if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{try{const parsed=parseCSV(reader.result);orders=parsed;$('file-name').textContent=file.name;const statuses=[...new Set(orders.map(o=>o.Status).filter(Boolean))].sort();const select=$('status-filter');select.replaceChildren(new Option('Todos os status',''));statuses.forEach(s=>select.add(new Option(s,s)));render();showMessage(`${orders.length} pedido(s) lido(s) do CSV. Os campos são exibidos conforme vieram na planilha.`);}catch(error){orders=[];$('file-name').textContent='Nenhum CSV importado';render();showMessage(error.message,true);}};
+  reader.onerror=()=>showMessage('Não foi possível ler o arquivo CSV.',true);
+  reader.readAsText(file,'UTF-8');
+});
+$('search').addEventListener('input',render);$('status-filter').addEventListener('change',render);
+$('export-button').addEventListener('click',()=>{
+  const headers=['Order ID','SLS Tracking Number','Buyer Name','Received Time','Status','Current Station','Return Destination'];
+  const quote=value=>'"'+String(value??'').replace(/"/g,'""')+'"';
+  const csv=[headers,...orders.map(o=>headers.map(h=>o[h]))].map(row=>row.map(quote).join(',')).join('\r\n');
+  const link=document.createElement('a');const url=URL.createObjectURL(new Blob(['\uFEFF',csv],{type:'text/csv;charset=utf-8'}));link.href=url;link.download='stuck_export.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+render();
+</script>
+</body>
+</html>
